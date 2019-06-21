@@ -3,12 +3,13 @@ from pathlib import Path
 from collections import namedtuple
 
 
-PATH_HOME   = Path(__file__).resolve().parent.parent
-PATH_MODEL  = PATH_HOME / 'model'
-PATH_DATA   = PATH_HOME / 'data'
-PATH_DATA_R = PATH_DATA / '00_raw'
-PATH_DATA_I = PATH_DATA / '01_interim'
-PATH_DATA_P = PATH_DATA / '02_processed'
+PATH_HOME    = Path(__file__).resolve().parent.parent
+PATH_MODEL   = PATH_HOME / 'model'
+PATH_DATA    = PATH_HOME / 'data'
+PATH_DATA_R  = PATH_DATA / '00_raw'
+PATH_DATA_I  = PATH_DATA / '01_interim'
+PATH_DATA_P  = PATH_DATA / '02_processed'
+PATH_RESULTS = PATH_HOME / 'results'
 
 
 def load_ini(filename):
