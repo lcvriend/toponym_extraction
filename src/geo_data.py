@@ -1,3 +1,4 @@
+import re
 import json
 import requests
 import string
@@ -65,7 +66,33 @@ def load_rest_countries(language='en', alts_json=None):
     return countries
 
 
-def parse_wiki_places(url):
+def load_capitals_from_wiki():
+    """
+    Extract country-capital pairs in Dutch from the following page:
+
+    https://nl.wikipedia.org/wiki/Lijst_van_hoofdsteden
+
+    Returns
+    =======
+    :load_capitals_from_wiki: `list`
+    """
+
+    url = 'https://nl.wikipedia.org/wiki/Lijst_van_hoofdsteden'
+    html = requests.get(url)
+    soup = BeautifulSoup(html.text)
+
+    capitals = list()
+    for span in soup.body.find_all(id=re.compile('Landen.*')):
+        for el in span.parent.next_siblings:
+            if el.name == 'h3':
+                break
+            elif el.name == 'div':
+                for li in el.find_all('li'):
+                    capitals.append(li.text.split(' - '))
+    return capitals
+
+
+def parse_wiki_place_lists(url):
     """
     Extract place names from wikipedia lists.
     Examples of pages the parser can handle:
