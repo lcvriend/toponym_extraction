@@ -4,6 +4,7 @@ __pycache__/
 testing/
 data/*
 model/*
+resources/*
 !**/.gitkeep
 *.code-workspace
 *.ipynb
