@@ -1,10 +1,113 @@
-import re
 import json
+import re
 import requests
 import string
+import zipfile
 import pandas as pd
 from collections import namedtuple
+from pathlib import Path
 from bs4 import BeautifulSoup
+from tqdm import tqdm
+from .config import PATH_RESOURCES, PARAM
+
+
+def create_geonames_datasets(language=None):
+
+    def load_data(url, cols):
+        zip_name = Path(url).name
+        zip_path = PATH_RESOURCES / zip_name
+        csv_name = Path(zip_name).with_suffix('.txt').name
+
+        return load_csv_from_zip(
+            zip_path,
+            csv_name,
+            names=cols,
+            usecols=cols,
+            )
+
+    paths = dict()
+    for param in PARAM._fields:
+        if param.startswith('url_'):
+            url = getattr(PARAM, param)
+            paths[param] = path_name = PATH_RESOURCES / Path(url).name
+            if not path_name.is_file():
+                download_from_url(url, path_out=PATH_RESOURCES)
+
+    df_countries = pd.read_csv(
+        paths['url_countryinfo'],
+        sep='\t',
+        encoding='utf8',
+        skiprows=50,
+        )
+    df_admin = pd.read_csv(
+        paths['url_admincodes'],
+        sep='\t',
+        encoding='utf8',
+        )
+
+    geonames = [
+        'geoname_id', 'name', 'ascii_name', 'alternate_names',
+        'latitude', 'longitude',
+        'feature_class', 'feature_code',
+        'country_code', 'cc2',
+        'admin1_code', 'admin2_code', 'admin3_code', 'admin4_code',
+        'population', 'elevation', 'dem', 'timezone',
+        'modification_date',
+        ]
+    altnames = [
+        'alternate_name_id',
+        'geoname_id',
+        'isolanguage',
+        'alternate_name',
+        ]
+
+    df_geo = load_data(PARAM.url_cities, geonames)
+    df_alt = load_data(PARAM.url_alts, altnames)
+    df_geo = df_geo.drop('alternate_names', axis=1)
+    ids = set(df_geo.geoname_id)
+    df_alt = df_alt.query("geoname_id in @ids")
+
+    language = PARAM.language
+    if language:
+        if not isinstance(language, list):
+            language=[language]
+        df_alt = df_alt.query("isolanguage in @language")
+
+    df_countries.to_pickle(PATH_RESOURCES / 'df_countries.pkl')
+    df_admin.to_pickle(PATH_RESOURCES / 'df_admin.pkl')
+    df_geo.to_pickle(PATH_RESOURCES / 'df_geo.pkl')
+    df_alt.to_pickle(PATH_RESOURCES / 'df_alt.pkl')
+    return None
+
+
+def load_csv_from_zip(
+    zip_path,
+    csv_name,
+    sep='\t',
+    encoding='utf8',
+    **kwargs,
+    ):
+    with zipfile.ZipFile(zip_path, 'r') as zip:
+        with zip.open(csv_name) as f:
+            return pd.read_csv(f, sep=sep, encoding=encoding, **kwargs)
+
+
+def download_from_url(url, path_out=None):
+    file_path = Path(url).name
+    r = requests.get(url, stream=True)
+    size = r.headers['Content-length']
+
+    if not r.status_code == requests.codes.ok:
+        raise requests.exceptions.HTTPError(
+            f"The following url: '{url}' returned status code {r.status_code}. "
+            f"Check if the provided url is still valid."
+            )
+    if path_out:
+        file_path = path_out / file_path
+    with open(file_path, 'wb') as handle:
+        for data in tqdm(r.iter_content(), desc=path_out.name, total=int(size)):
+            handle.write(data)
+    return None
 
 
 def load_rest_countries(language='en', alts_json=None):
