@@ -182,7 +182,7 @@ def load_capitals_from_wiki():
 
     url = 'https://nl.wikipedia.org/wiki/Lijst_van_hoofdsteden'
     html = requests.get(url)
-    soup = BeautifulSoup(html.text)
+    soup = BeautifulSoup(html.text, features='lxml')
 
     capitals = list()
     for span in soup.body.find_all(id=re.compile('Landen.*')):
