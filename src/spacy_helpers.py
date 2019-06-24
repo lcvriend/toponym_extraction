@@ -1,4 +1,5 @@
 import pandas as pd
+from tqdm import tqdm
 from spacy.tokens import Doc
 from .config import PATH_DATA_I, PATH_DATA_P
 from .lexisnexis_parser import codify_batch
@@ -37,7 +38,6 @@ def serialize_batch(nlp, batch, path_in=PATH_DATA_I, path_out=PATH_DATA_P):
     :serialize_batch: None
     """
 
-
     if isinstance(path_in, str):
         path_in = Path(path_in)
     if isinstance(path_out, str):
@@ -47,9 +47,10 @@ def serialize_batch(nlp, batch, path_in=PATH_DATA_I, path_out=PATH_DATA_P):
     if not path_batch.exists():
         path_batch.mkdir(parents=True)
 
-    print(f"Processing: {batch}")
     df = pd.read_pickle(path_in / f"{batch}_.pkl")
-    for idx, body in df.body_.iteritems():
+    for idx, body in tqdm(
+        df.body_.iteritems(), desc=f"{batch:.<24}", total=len(df)
+        ):
         doc_id = f"{codify_batch(batch)}_{idx:03d}"
         doc = nlp(body)
         doc._.id = doc_id
