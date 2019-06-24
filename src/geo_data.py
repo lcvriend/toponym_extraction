@@ -154,8 +154,8 @@ def load_rest_countries(language='en', alts_json=None):
             }
     else:
         countries = {
-            i['translations']['nl']: i
-            for i in data if i['translations']['nl'] is not None
+            i['translations'][language]: i
+            for i in data if i['translations'][language] is not None
             }
 
     if alts_json:
