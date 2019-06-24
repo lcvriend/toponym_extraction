@@ -260,7 +260,7 @@ def standardize_df(
 
     # add id
     df['id'] = df.apply(
-        lambda row: f"{codify_source(batch)}_{row.name:04d}", axis=1
+        lambda row: f"{codify_batch(batch)}_{row.name:04d}", axis=1
         )
 
     df_out.update(df)
