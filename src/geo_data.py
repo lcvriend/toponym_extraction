@@ -240,7 +240,7 @@ def parse_wiki_place_lists(url):
     return results
 
 
-def load_cbs_dutch_cities(table_id='83859NED'):
+def load_cbs_dutch_cities(table_id='83859NED', alts_json=None):
     """
     Return a `DataFrame` of Dutch cities in the CBS dataset:
     > 'Gebieden in Nederland 2018'
@@ -275,7 +275,18 @@ def load_cbs_dutch_cities(table_id='83859NED'):
     dataset = load_cbs_dataset(table_id)
     df = pd.DataFrame.from_dict(dataset.typeddataset)
     df.update(df.select_dtypes(exclude='number').applymap(lambda x: x.strip()))
-    return df[cols].rename(columns=cols).sort_values('provincie')
+    df = df[cols].rename(columns=cols)
+
+    if alts_json:
+        with open(alts_json, 'r', encoding='utf8') as f:
+            alts = json.load(f)
+
+        for key in alts:
+            for alt in alts[key]:
+                df_ = df.loc[df.gemeentenaam == key].copy()
+                df_.gemeentenaam = alt
+                df = df.append(df_)
+    return df.sort_values(['provincie', 'gemeentenaam'])
 
 
 def load_cbs_dataset(table_id):
