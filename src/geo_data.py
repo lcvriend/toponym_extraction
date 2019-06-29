@@ -131,7 +131,10 @@ def download_from_url(url, path_out=None):
     if path_out:
         file_path = path_out / file_path
     with open(file_path, 'wb') as handle:
-        for data in tqdm(r.iter_content(), desc=path_out.name, total=int(size)):
+        for data in tqdm(
+            r.iter_content(),
+            desc=f"{file_path.name:.<24}",
+            total=int(size)):
             handle.write(data)
     return None
 
