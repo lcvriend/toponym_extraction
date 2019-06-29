@@ -60,10 +60,13 @@ def create_geonames_datasets(language=None):
         encoding='utf8',
         skiprows=50,
         )
+
+    admin = ['code', 'name', 'ascii_name', 'geoname_id']
     df_admin = pd.read_csv(
         paths['url_admincodes'],
         sep='\t',
         encoding='utf8',
+        names=admin,
         )
 
     geonames = [
