@@ -11,7 +11,22 @@ from tqdm import tqdm
 from .config import PATH_RESOURCES, PARAM
 
 
+# GeoNames
 def create_geonames_datasets(language=None):
+    """
+    Create datasets from the GeoNames geographical database.
+    - Download resources from 'https://www.geonames.org/' if not yet present.
+    - Use the alternative names from the selected languages.
+    - Convert the files to DataFrames and pickle them.
+
+    Key-word arguments
+    ==================
+    :param language: `str` or `list`, default=None
+
+    Returns
+    =======
+    None
+    """
 
     def load_data(url, cols):
         zip_name = Path(url).name
@@ -25,6 +40,7 @@ def create_geonames_datasets(language=None):
             usecols=cols,
             )
 
+    # Download the resources if they are not yet present
     paths = dict()
     for param in PARAM._fields:
         if param.startswith('url_'):
@@ -33,6 +49,7 @@ def create_geonames_datasets(language=None):
             if not path_name.is_file():
                 download_from_url(url, path_out=PATH_RESOURCES)
 
+    # read the files
     df_countries = pd.read_csv(
         paths['url_countryinfo'],
         sep='\t',
@@ -60,9 +77,10 @@ def create_geonames_datasets(language=None):
         'isolanguage',
         'alternate_name',
         ]
-
     df_geo = load_data(PARAM.url_cities, geonames)
     df_alt = load_data(PARAM.url_alts, altnames)
+
+    # process the datasets
     df_geo = df_geo.drop('alternate_names', axis=1)
     ids = set(df_geo.geoname_id)
     df_alt = df_alt.query("geoname_id in @ids")
@@ -73,6 +91,7 @@ def create_geonames_datasets(language=None):
             language=[language]
         df_alt = df_alt.query("isolanguage in @language")
 
+    # save the datasets to disk
     df_countries.to_pickle(PATH_RESOURCES / 'df_countries.pkl')
     df_admin.to_pickle(PATH_RESOURCES / 'df_admin.pkl')
     df_geo.to_pickle(PATH_RESOURCES / 'df_geo.pkl')
@@ -110,15 +129,18 @@ def download_from_url(url, path_out=None):
     return None
 
 
+# REST_countries
 def load_rest_countries(language='en', alts_json=None):
     """
     Load countries from 'https://restcountries.eu' and store data as dict.
 
-    ## Translations
+    Translations
+    ============
     If language is not 'en' or 'us', name will be taken from 'translations'.
     Check 'https://restcountries.eu' to see which translations are available.
 
-    ## Adding alternative names
+    Adding alternative names
+    ========================
     Pass path to `alts_json` to load alternative names into the dict.
     The json file should consist of:
     - a key referring to the country record you want to add alternatives to.
@@ -169,6 +191,91 @@ def load_rest_countries(language='en', alts_json=None):
     return countries
 
 
+# CBS
+def load_cbs_dutch_cities(table_id='83859NED', alts_json=None):
+    """
+    Return a `DataFrame` of Dutch cities in the CBS dataset:
+    > 'Gebieden in Nederland 2018'
+
+    The df contains the following info:
+    - Province
+    - Municipality
+    - Level of urbanization
+    - Number of residents
+    - Address density
+
+    Strings are stripped of leading/trailing spaces.
+
+    Optional key-word arguments
+    ===========================
+    :param table_id: `str`, default='83859NED'
+        CBS table id, can be updated to a newer year.
+
+    Returns
+    =======
+    :load_cbs_dutch_cities: `DataFrame`
+    """
+
+    cols = {
+        'Naam_33':                       'provincie',
+        'Naam_2':                        'gemeentenaam',
+        'Omschrijving_49':               'stedelijkheid',
+        'Inwonertal_50':                 'inwonertal',
+        'Omgevingsadressendichtheid_51': 'adressendichtheid',
+        }
+
+    dataset = load_cbs_dataset(table_id)
+    df = pd.DataFrame.from_dict(dataset.typeddataset)
+    df.update(df.select_dtypes(exclude='number').applymap(lambda x: x.strip()))
+    df = df[cols].rename(columns=cols)
+
+    if alts_json:
+        with open(alts_json, 'r', encoding='utf8') as f:
+            alts = json.load(f)
+
+        for key in alts:
+            for alt in alts[key]:
+                df_ = df.loc[df.gemeentenaam == key].copy()
+                df_.gemeentenaam = alt
+                df = df.append(df_)
+    return df.sort_values(['provincie', 'gemeentenaam'])
+
+
+def load_cbs_dataset(table_id):
+    """
+    Load data sets from an opendata.cbs.nl table.
+    The underlying data is stored as dictionaries in a namedtuple.
+
+    For more information check:
+    https://www.cbs.nl/nl-nl/onze-diensten/open-data/databank-cbs-statline-als-open-data
+    https://www.cbs.nl/-/media/_pdf/2017/13/handleiding-cbs-open-data-services.pdf?la=nl-nl
+
+    Available tables can be viewed here:
+    https://opendata.cbs.nl/ODataCatalog/Tables
+    table_id is stored in the 'd:Identifier' tag.
+
+    Parameters
+    ==========
+    :param table_id: `str`
+        Id for the CBS table.
+
+    Returns
+    =======
+    :load_cbs: `namedtuple`
+    """
+
+    url = f"https://opendata.cbs.nl/ODataApi/OData/{table_id}"
+    data_links = requests.get(url).json()['value']
+    CBS_Data = namedtuple(
+        'CBS_Data', [link['name'].lower() for link in data_links]
+        )
+
+    return CBS_Data(
+        *[requests.get(link['url']).json()['value'] for link in data_links]
+        )
+
+
+# WIKI
 def load_capitals_from_wiki():
     """
     Extract country-capital pairs in Dutch from the following page:
@@ -238,86 +345,3 @@ def parse_wiki_place_lists(url):
             f"the place names from this page."
             )
     return results
-
-
-def load_cbs_dutch_cities(table_id='83859NED', alts_json=None):
-    """
-    Return a `DataFrame` of Dutch cities in the CBS dataset:
-    > 'Gebieden in Nederland 2018'
-
-    The df contains the following info:
-    - Province
-    - Municipality
-    - Level of urbanization
-    - Number of residents
-    - Address density
-
-    Strings are stripped of leading/trailing spaces.
-
-    Optional key-word arguments
-    ===========================
-    :param table_id: `str`, default='83859NED'
-        CBS table id, can be updated to a newer year.
-
-    Returns
-    =======
-    :load_cbs_dutch_cities: `DataFrame`
-    """
-
-    cols = {
-        'Naam_33':                       'provincie',
-        'Naam_2':                        'gemeentenaam',
-        'Omschrijving_49':               'stedelijkheid',
-        'Inwonertal_50':                 'inwonertal',
-        'Omgevingsadressendichtheid_51': 'adressendichtheid',
-        }
-
-    dataset = load_cbs_dataset(table_id)
-    df = pd.DataFrame.from_dict(dataset.typeddataset)
-    df.update(df.select_dtypes(exclude='number').applymap(lambda x: x.strip()))
-    df = df[cols].rename(columns=cols)
-
-    if alts_json:
-        with open(alts_json, 'r', encoding='utf8') as f:
-            alts = json.load(f)
-
-        for key in alts:
-            for alt in alts[key]:
-                df_ = df.loc[df.gemeentenaam == key].copy()
-                df_.gemeentenaam = alt
-                df = df.append(df_)
-    return df.sort_values(['provincie', 'gemeentenaam'])
-
-
-def load_cbs_dataset(table_id):
-    """
-    Load data sets from an opendata.cbs.nl table.
-    The underlying data is stored as dictionaries in a namedtuple.
-
-    ## For more information check:
-    https://www.cbs.nl/nl-nl/onze-diensten/open-data/databank-cbs-statline-als-open-data
-    https://www.cbs.nl/-/media/_pdf/2017/13/handleiding-cbs-open-data-services.pdf?la=nl-nl
-
-    Available tables can be viewed here:
-    https://opendata.cbs.nl/ODataCatalog/Tables
-    table_id is stored in the 'd:Identifier' tag.
-
-    Parameters
-    ==========
-    :param table_id: `str`
-        Id for the CBS table.
-
-    Returns
-    =======
-    :load_cbs: `namedtuple`
-    """
-
-    url = f"https://opendata.cbs.nl/ODataApi/OData/{table_id}"
-    data_links = requests.get(url).json()['value']
-    CBS_Data = namedtuple(
-        'CBS_Data', [link['name'].lower() for link in data_links]
-        )
-
-    return CBS_Data(
-        *[requests.get(link['url']).json()['value'] for link in data_links]
-        )
