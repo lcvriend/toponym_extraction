@@ -1,4 +1,7 @@
+# standard library
 import itertools
+
+# third party
 import pandas as pd
 
 

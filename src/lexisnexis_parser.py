@@ -1,8 +1,11 @@
+# standard library
 import zipfile
-import pandas as pd
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from unicodedata import normalize
+
+# third party
+import pandas as pd
+import xml.etree.ElementTree as ET
 
 
 URI = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'

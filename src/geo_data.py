@@ -1,13 +1,17 @@
+# standard library
 import json
 import re
 import requests
-import string
 import zipfile
-import pandas as pd
 from collections import namedtuple
 from pathlib import Path
+
+# third party
+import pandas as pd
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+
+# local
 from .config import PATH_RESOURCES, PARAM
 
 

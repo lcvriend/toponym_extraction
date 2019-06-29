@@ -1,5 +1,8 @@
-import pandas as pd
+# standard library
 from collections import Counter
+
+# third party
+import pandas as pd
 
 
 def basic_stats(doc):

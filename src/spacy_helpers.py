@@ -1,8 +1,12 @@
+# third party
 import pandas as pd
 from tqdm import tqdm
 from spacy.tokens import Doc
+
+# local
 from .config import PATH_DATA_I, PATH_DATA_P
 from .lexisnexis_parser import codify_batch
+
 Doc.set_extension('id', default=None)
 
 
