@@ -32,9 +32,11 @@ def create_geonames_datasets(language=None):
     None
     """
 
+    path_geonames = PATH_RESOURCES / 'geonames'
+
     def load_data(url, cols):
         zip_name = Path(url).name
-        zip_path = PATH_RESOURCES / zip_name
+        zip_path = path_geonames / zip_name
         csv_name = Path(zip_name).with_suffix('.txt').name
 
         return load_csv_from_zip(
@@ -49,9 +51,9 @@ def create_geonames_datasets(language=None):
     for param in PARAM._fields:
         if param.startswith('url_'):
             url = getattr(PARAM, param)
-            paths[param] = path_name = PATH_RESOURCES / Path(url).name
+            paths[param] = path_name = path_geonames / Path(url).name
             if not path_name.is_file():
-                download_from_url(url, path_out=PATH_RESOURCES)
+                download_from_url(url, path_out=path_geonames)
 
     # read the files
     df_countries = pd.read_csv(
