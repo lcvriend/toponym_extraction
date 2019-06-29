@@ -64,11 +64,26 @@ def create_geonames_datasets(language=None):
         )
 
     admin = ['code', 'name', 'ascii_name', 'geoname_id']
-    df_admin = pd.read_csv(
-        paths['url_admincodes'],
+    df_admin1 = pd.read_csv(
+        paths['url_admincodes1'],
         sep='\t',
         encoding='utf8',
         names=admin,
+        )
+
+    df_admin2 = pd.read_csv(
+        paths['url_admincodes2'],
+        sep='\t',
+        encoding='utf8',
+        names=admin,
+        )
+
+    feat = ['class_code', 'feat_name', 'feat_description']
+    df_feat = pd.read_csv(
+        paths['url_featcodes'],
+        sep='\t',
+        encoding='utf8',
+        names=feat,
         )
 
     geonames = [
@@ -80,13 +95,14 @@ def create_geonames_datasets(language=None):
         'population', 'elevation', 'dem', 'timezone',
         'modification_date',
         ]
+    df_geo = load_data(PARAM.url_cities, geonames)
+
     altnames = [
         'alternate_name_id',
         'geoname_id',
         'isolanguage',
         'alternate_name',
         ]
-    df_geo = load_data(PARAM.url_cities, geonames)
     df_alt = load_data(PARAM.url_alts, altnames)
 
     # process the datasets
@@ -102,7 +118,9 @@ def create_geonames_datasets(language=None):
 
     # save the datasets to disk
     df_countries.to_pickle(PATH_RESOURCES / 'df_countries.pkl')
-    df_admin.to_pickle(PATH_RESOURCES / 'df_admin.pkl')
+    df_admin1.to_pickle(PATH_RESOURCES / 'df_admin1.pkl')
+    df_admin2.to_pickle(PATH_RESOURCES / 'df_admin2.pkl')
+    df_feat.to_pickle(PATH_RESOURCES / 'df_feat.pkl')
     df_geo.to_pickle(PATH_RESOURCES / 'df_geo.pkl')
     df_alt.to_pickle(PATH_RESOURCES / 'df_alt.pkl')
     return None
