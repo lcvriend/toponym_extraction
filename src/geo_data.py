@@ -9,19 +9,22 @@ from pathlib import Path
 # third party
 import pandas as pd
 from bs4 import BeautifulSoup
-from tqdm import tqdm
 
 # local
 from .config import PATH_RESOURCES, PARAM
+from .utils import download_from_url
 
 
 # GeoNames
 def create_geonames_datasets(language=None):
     """
-    Create datasets from the GeoNames geographical database.
-    - Download resources from 'https://www.geonames.org/' if not yet present.
-    - Use the alternative names from the selected languages.
-    - Convert the files to DataFrames and pickle them.
+    Store data from the GeoNames geographical database as `DataFrames`.
+    Instructions are stored in `parameters.ini` under section 'geonames':
+    - urls of the files to be downloaded
+    - how to parse the csv files
+        * column names
+        * skip rows if any
+        * skip cols if any
 
     Key-word arguments
     ==================
@@ -34,128 +37,99 @@ def create_geonames_datasets(language=None):
 
     path_geonames = PATH_RESOURCES / 'geonames'
 
-    def load_data(url, cols):
-        zip_name = Path(url).name
-        zip_path = path_geonames / zip_name
-        csv_name = Path(zip_name).with_suffix('.txt').name
-
-        return load_csv_from_zip(
-            zip_path,
-            csv_name,
-            names=cols,
-            usecols=cols,
-            )
-
-    # Download the resources if they are not yet present
+    # Check if resources are present
+    print_title('searching for resources')
+    not_downloaded = list()
     paths = dict()
-    for param in PARAM._fields:
+    for param in PARAM.geonames._fields:
         if param.startswith('url_'):
-            url = getattr(PARAM, param)
-            paths[param] = path_name = path_geonames / Path(url).name
-            if not path_name.is_file():
-                download_from_url(url, path_out=path_geonames)
+            url = getattr(PARAM.geonames, param)
+            paths[param] = path_file = path_geonames / Path(url).name
+            print(f"{path_file.name:.<24}: ", end='', flush=True)
+            if not path_file.is_file():
+                # download_from_url(url, path_out=path_geonames)
+                print('not found', flush=True)
+                not_downloaded.append(url)
+            else:
+                # print(f"{path_name.name:.<24}: OK")
+                print('OK', flush=True)
+    print(flush=True)
 
-    # read the files
-    df_countries = pd.read_csv(
-        paths['url_countryinfo'],
-        sep='\t',
-        encoding='utf8',
-        skiprows=50,
-        )
+    # Download missing resources
+    if not_downloaded:
+        print_title('download missing resources')
+        for url in not_downloaded:
+            download_from_url(url, path_out=path_geonames)
+        print(flush=True)
 
-    admin = ['code', 'name', 'ascii_name', 'geoname_id']
-    df_admin1 = pd.read_csv(
-        paths['url_admincodes1'],
-        sep='\t',
-        encoding='utf8',
-        names=admin,
-        )
+    # Load the data into DataFrames
+    print_title('loading data')
+    settings = {'sep': '\t', 'encoding': 'utf8'}
+    dfs = dict()
+    for path in paths:
+        if 'readme' in path:
+            continue
+        print(f"{path:.<24}: ", end='', flush=True)
+        table = path[4:]
+        skiprows = getattr(PARAM.geonames, f"{table}_skiprows", None)
+        skipcols = getattr(PARAM.geonames, f"{table}_skipcols", [])
+        names = getattr(PARAM.geonames, f"{table}_columns", None)
+        if names:
+            usecols = [name for name in names if name not in skipcols]
+        if paths[path].suffix == '.zip':
+            zip_name = Path(paths[path]).name
+            zip_path = path_geonames / zip_name
+            csv_name = Path(zip_name).with_suffix('.txt').name
+            df = load_csv_from_zip(
+                zip_path,
+                csv_name,
+                names=names,
+                usecols=usecols,
+                **settings,
+                )
+        else:
+            df = pd.read_csv(
+                paths[path],
+                names=names,
+                usecols=usecols,
+                skiprows=skiprows,
+                **settings,
+                )
+        dfs[table] = df
+        print('OK', flush=True)
+    print(flush=True)
 
-    df_admin2 = pd.read_csv(
-        paths['url_admincodes2'],
-        sep='\t',
-        encoding='utf8',
-        names=admin,
-        )
-
-    feat = ['class_code', 'feat_name', 'feat_description']
-    df_feat = pd.read_csv(
-        paths['url_featcodes'],
-        sep='\t',
-        encoding='utf8',
-        names=feat,
-        )
-
-    geonames = [
-        'geoname_id', 'name', 'ascii_name', 'alternate_names',
-        'latitude', 'longitude',
-        'feature_class', 'feature_code',
-        'country_code', 'cc2',
-        'admin1_code', 'admin2_code', 'admin3_code', 'admin4_code',
-        'population', 'elevation', 'dem', 'timezone',
-        'modification_date',
-        ]
-    df_geo = load_data(PARAM.url_cities, geonames)
-
-    altnames = [
-        'alternate_name_id',
-        'geoname_id',
-        'isolanguage',
-        'alternate_name',
-        ]
-    df_alt = load_data(PARAM.url_alts, altnames)
-
-    # process the datasets
-    df_geo = df_geo.drop('alternate_names', axis=1)
-    ids = set(df_geo.geoname_id)
-    df_alt = df_alt.query("geoname_id in @ids")
-
-    language = PARAM.language
+    # process the alts dataset
+    ids = set(dfs['cities'].geoname_id)
+    dfs['alts'] = dfs['alts'].query("geoname_id in @ids")
+    language = PARAM.project.language
     if language:
         if not isinstance(language, list):
             language=[language]
-        df_alt = df_alt.query("isolanguage in @language")
+        dfs['alts']  = dfs['alts'].query("isolanguage in @language")
 
     # save the datasets to disk
-    df_countries.to_pickle(PATH_RESOURCES / 'df_countries.pkl')
-    df_admin1.to_pickle(PATH_RESOURCES / 'df_admin1.pkl')
-    df_admin2.to_pickle(PATH_RESOURCES / 'df_admin2.pkl')
-    df_feat.to_pickle(PATH_RESOURCES / 'df_feat.pkl')
-    df_geo.to_pickle(PATH_RESOURCES / 'df_geo.pkl')
-    df_alt.to_pickle(PATH_RESOURCES / 'df_alt.pkl')
+    print_title('storing data')
+    for table in dfs:
+        file = f"df_{table}.pkl"
+        print(f"{file:.<24}: ", end='', flush=True)
+        dfs[table].to_pickle(path_geonames / file)
+        print('OK', flush=True)
     return None
 
 
 def load_csv_from_zip(
     zip_path,
     csv_name,
-    sep='\t',
-    encoding='utf8',
     **kwargs,
     ):
     with zipfile.ZipFile(zip_path, 'r') as zip:
         with zip.open(csv_name) as f:
-            return pd.read_csv(f, sep=sep, encoding=encoding, **kwargs)
+            return pd.read_csv(f, **kwargs)
 
 
-def download_from_url(url, path_out=None):
-    file_path = Path(url).name
-    r = requests.get(url, stream=True)
-    size = r.headers['Content-length']
-
-    if not r.status_code == requests.codes.ok:
-        raise requests.exceptions.HTTPError(
-            f"The following url: '{url}' returned status code {r.status_code}. "
-            f"Check if the provided url is still valid."
-            )
-    if path_out:
-        file_path = path_out / file_path
-    with open(file_path, 'wb') as handle:
-        for data in tqdm(
-            r.iter_content(),
-            desc=f"{file_path.name:.<24}",
-            total=int(size)):
-            handle.write(data)
+def print_title(x):
+    print(f"{x.upper()}\n{'=' * len(x)}", flush=True)
     return None
 
 
