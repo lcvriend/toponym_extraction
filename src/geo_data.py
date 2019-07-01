@@ -2,7 +2,6 @@
 import json
 import re
 import requests
-import zipfile
 from collections import namedtuple
 from pathlib import Path
 
@@ -16,127 +15,96 @@ from .utils import download_from_url
 
 
 # GeoNames
-def create_geonames_datasets(language=None):
+def load_geonames(language=PARAM.project.language):
     """
-    Store data from the GeoNames geographical database as `DataFrames`.
-    Instructions are stored in `parameters.ini` under section 'geonames':
-    - urls of the files to be downloaded
-    - how to parse the csv files
-        * column names
-        * skip rows if any
-        * skip cols if any
+    Load data from the geonames dataset and return as `DataFrame`.
 
-    Key-word arguments
-    ==================
-    :param language: `str` or `list`, default=None
+    Optional key-word arguments
+    ===========================
+    :param language: `str`, default=project parameter in 'parameters.ini'
+    :param language: `str` or `list`,
+        default=project parameter in 'parameters.ini'
+        Language for returning the city names.
 
     Returns
     =======
-    None
+    :load_geonames: `DataFrame`
     """
 
     path_geonames = PATH_RESOURCES / 'geonames'
-
-    # Check if resources are present
-    print_title('searching for resources')
-    not_downloaded = list()
-    paths = dict()
-    for param in PARAM.geonames._fields:
-        if param.startswith('url_'):
-            url = getattr(PARAM.geonames, param)
-            paths[param] = path_file = path_geonames / Path(url).name
-            print(f"{path_file.name:.<24}: ", end='', flush=True)
-            if not path_file.is_file():
-                # download_from_url(url, path_out=path_geonames)
-                print('not found', flush=True)
-                not_downloaded.append(url)
-            else:
-                # print(f"{path_name.name:.<24}: OK")
-                print('OK', flush=True)
-    print(flush=True)
-
-    # Download missing resources
-    if not_downloaded:
-        print_title('download missing resources')
-        for url in not_downloaded:
-            download_from_url(url, path_out=path_geonames)
-        print(flush=True)
-
-    # Load the data into DataFrames
-    print_title('loading data')
-    settings = {'sep': '\t', 'encoding': 'utf8'}
-    dfs = dict()
-    for path in paths:
-        if 'readme' in path:
-            continue
-        print(f"{path:.<24}: ", end='', flush=True)
-        table = path[4:]
-        skiprows = getattr(PARAM.geonames, f"{table}_skiprows", None)
-        skipcols = getattr(PARAM.geonames, f"{table}_skipcols", [])
-        names = getattr(PARAM.geonames, f"{table}_columns", None)
-        if names:
-            usecols = [name for name in names if name not in skipcols]
-        if paths[path].suffix == '.zip':
-            zip_name = Path(paths[path]).name
-            zip_path = path_geonames / zip_name
-            csv_name = Path(zip_name).with_suffix('.txt').name
-            df = load_csv_from_zip(
-                zip_path,
-                csv_name,
-                names=names,
-                usecols=usecols,
-                **settings,
-                )
-        else:
-            df = pd.read_csv(
-                paths[path],
-                names=names,
-                usecols=usecols,
-                skiprows=skiprows,
-                **settings,
-                )
-        dfs[table] = df
-        print('OK', flush=True)
-    print(flush=True)
+    dfs = {i.stem[3:]:pd.read_pickle(i) for i in path_geonames.glob('*.pkl')}
 
     # process the alts dataset
     ids = set(dfs['cities'].geoname_id)
     dfs['alts'] = dfs['alts'].query("geoname_id in @ids")
-    language = PARAM.project.language
     if language:
         if not isinstance(language, list):
             language=[language]
         dfs['alts']  = dfs['alts'].query("isolanguage in @language")
 
-    # save the datasets to disk
-    print_title('storing data')
-    for table in dfs:
-        file = f"df_{table}.pkl"
-        print(f"{file:.<24}: ", end='', flush=True)
-        dfs[table].to_pickle(path_geonames / file)
-        print('OK', flush=True)
-    return None
+    dfs['featcodes']['feature_code'] = (
+        dfs['featcodes'].class_code.str.split('.').str[1]
+        )
 
+    dfs['admincodes1'] = (
+        dfs['admincodes1']
+        .join(dfs['admincodes1'].code.str.split('.', expand=True))
+        .rename(columns={
+            0:'country_code',
+            1:'admin_code1',
+            'admin_name': 'admin_name1'}
+            )
+        )
 
-def load_csv_from_zip(
-    zip_path,
-    csv_name,
-    **kwargs,
-    ):
-    with zipfile.ZipFile(zip_path, 'r') as zip:
-        with zip.open(csv_name) as f:
-            return pd.read_csv(f, **kwargs)
+    dfs['admincodes2'] = (
+        dfs['admincodes2']
+        .join(dfs['admincodes2'].code.str.split('.', expand=True))
+        .rename(columns={
+            0:'country_code',
+            1:'admin_code1',
+            2:'admin_code2',
+            'admin_name': 'admin_name2'}
+            )
+        )
 
+    df = (
+        dfs['cities']
+        .merge(dfs['alts'][
+            ['geoname_id', 'alternate_name']
+            ], on='geoname_id', how='left')
+        .merge(dfs['countryinfo'][
+            ['country_code', 'country']
+            ], on='country_code', how='left')
+        .merge(dfs['featcodes'][
+            ['feature_code', 'feature_name']
+            ], on='feature_code', how='left')
+        .merge(dfs['admincodes1'][
+            ['country_code', 'admin_code1', 'admin_name1']
+            ], on=['country_code', 'admin_code1'], how='left')
+        .merge(dfs['admincodes2'][
+            ['country_code', 'admin_code1', 'admin_code2', 'admin_name2']
+            ], on=['country_code', 'admin_code1', 'admin_code2'], how='left')
+        )
 
-def print_title(x):
-    print(f"{x.upper()}\n{'=' * len(x)}", flush=True)
-    return None
+    cols = [
+        'geoname_id', 'name', 'ascii_name', 'alternate_name',
+        'latitude', 'longitude',
+        'feature_code', 'feature_name',
+        'country_code', 'country',
+        'admin_code1', 'admin_name1', 'admin_code2', 'admin_name2',
+        'population',
+        ]
+    df = df[cols]
+    df['alt'] = df.alternate_name.notna()
+    df['alternate_name'] = df.alternate_name.fillna(df.name)
+
+    return df
 
 
 # REST_countries
-def load_rest_countries(language='en', alts_json=None):
+def load_rest_countries(language=PARAM.project.language, alts_json=None):
     """
-    Load countries from 'https://restcountries.eu' and store data as dict.
+    Load countries from 'https://restcountries.eu' and return data as dict.
 
     Translations
     ============
@@ -152,7 +120,7 @@ def load_rest_countries(language='en', alts_json=None):
 
     Optional key-word arguments
     ===========================
-    :param language: `str`, default='en'
+    :param language: `str`, default=project parameter in 'parameters.ini'
         Language for returning the country names.
         Options (but check 'https://restcountries.eu'):
             de - German         pt - Portuguese
