@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 
 
-def get_datasets(parameters, path_out):
+def get_dataset(parameters, path_out):
     """
     Get data as (zipped) csv's online and store as `DataFrames`.
     Instructions are passed through the 'parameters' argument.
