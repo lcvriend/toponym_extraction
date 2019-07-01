@@ -34,19 +34,23 @@ def drop_types(name):
 
 # create easy access to the parameters
 ini = load_ini(PATH_HOME / 'parameters.ini')
-param_names = [p for section in ini for p in ini[section]]
-Parameters = namedtuple(
-    'Parameters', [drop_types(name) for name in param_names]
-    )
+Parameters = namedtuple('Parameters', [s for s in ini])
 
-values = list()
-for section, p in tuple((section, p) for section in ini for p in ini[section]):
-    value = ini[section][p]
-    if 'list_' in p:
-        values.append(get_list(value))
-    elif 'int_' in p:
-        values.append(int(value))
-    else:
-        values.append(value)
+sections = list()
+for section in ini:
 
-PARAM = Parameters._make(values)
+    Section = namedtuple(
+        section, [drop_types(p) for p in ini[section]]
+        )
+    values = list()
+    for p in ini[section]:
+        value = ini[section][p]
+        if 'list_' in p:
+            values.append(get_list(value))
+        elif 'int_' in p:
+            values.append(int(value))
+        else:
+            values.append(value)
+
+    sections.append(Section._make(values))
+PARAM = Parameters._make(sections)
