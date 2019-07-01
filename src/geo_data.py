@@ -164,9 +164,9 @@ def load_rest_countries(language=PARAM.project.language, alts_json=None):
 
 
 # CBS
-def load_cbs_dutch_cities(table_id='83859NED', alts_json=None):
+def load_cbs_municipalities(table_id='83859NED', alts_json=None):
     """
-    Return a `DataFrame` of Dutch cities in the CBS dataset:
+    Return a `DataFrame` of Dutch municipalities in the CBS dataset:
     > 'Gebieden in Nederland 2018'
 
     The df contains the following info:
