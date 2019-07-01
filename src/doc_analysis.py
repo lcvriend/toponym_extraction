@@ -3,6 +3,64 @@ from collections import Counter
 
 # third party
 import pandas as pd
+from IPython.display import HTML, display, clear_output
+
+
+def phrase_explorer(df, search):
+
+    style = """
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            h1, h3, h4, p {
+                margin: 0 !important;
+                padding: 12px;
+            }
+            h1 {
+                background-color: black;
+                color: white;
+            }
+            hr {
+                margin: 0 !important;
+                border: none;
+                border-top: 1px solid black;
+            }
+            .box {
+                border: 1px solid black;
+            }
+        </style>
+        """
+
+    def explore(search, results):
+        for idx, row in df_q.reset_index().iterrows():
+            html = f"<h1>SOURCE: {row.source}</h1>"
+            html += f"<h3>RESULT: {idx + 1} of {results} | {row.id}</h3><hr>"
+            html += f"<h4>{row.title}</h4><hr>"
+
+            for p in row.body:
+                if search in p:
+                    p = f"<p>{p}</p>"
+                    html += p.replace(search, f"<mark>{search}</mark>")
+
+            html = f"{style}<div class='box'>{html}</div>"
+            display(HTML(html))
+            user = input(
+                "Press <enter> to continue "
+                "(you can also input a new search phrase or '.' to exit)"
+                )
+            clear_output()
+            if user == '.':
+                return user
+            if len(user) > 0:
+                return user
+        return '.'
+
+    while search != '.':
+        df_q = df.query("body_.str.contains(@search)", engine='python')
+        results = len(df_q)
+        search = explore(search, results)
+    return None
 
 
 def basic_stats(doc):
