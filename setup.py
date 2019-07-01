@@ -1,3 +1,4 @@
-from src.geo_data import create_geonames_datasets
+from src.config import PARAM, PATH_RESOURCES
+from src.utils import get_datasets
 
-create_geonames_datasets(language='nl')
+get_datasets(PARAM.geonames, PATH_RESOURCES / 'geonames')
