@@ -1,65 +1,218 @@
 # standard library
+import re
 from collections import Counter
+from datetime import datetime
 
 # third party
 import pandas as pd
 from IPython.display import HTML, display, clear_output
 
+# local
+from src.config import PATH_RESULTS
 
-def phrase_explorer(df, search):
 
-    style = """
-        <style>
-            * {
-                box-sizing: border-box;
-            }
-            h1, h3, h4, p {
-                margin: 0 !important;
-                padding: 12px;
-            }
-            h1 {
-                background-color: black;
-                color: white;
-            }
-            hr {
-                margin: 0 !important;
-                border: none;
-                border-top: 1px solid black;
-            }
-            .box {
-                border: 1px solid black;
-            }
-        </style>
-        """
+STYLE = """
+    * {
+        box-sizing: border-box;
+    }
+    h1, h2, h3, h4, p, .container {
+        margin: 0 !important;
+        padding: 12px;
+    }
+    h1 {
+        background-color: black;
+        color: white;
+    }
+    hr {
+        margin: 0 !important;
+        border: none;
+        border-top: 1px solid black;
+    }
+    .box {
+        border: 1px solid black;
+    }
+    """
 
-    def explore(search, results):
+
+def annotator(df, phrases, name='df_annotations', n=5, info=None):
+    """
+    Annotate search results.
+    Annotations are stored in PATH_RESULTS as a pickled ` DataFrame`:
+    > 'df_annotations.pkl'.
+
+    The annotator skips phrases that were annotated in a previous session.
+
+    Parameters
+    ==========
+    :param df: `DataFrame`
+        df containing the LexisNexis articles.
+    :param phrases: iterable
+        Iterable of phrases to annotate.
+
+    Optional key-word arguments
+    ===========================
+    :param name: `str`
+        Name of the `DataFrame` where the annotations will be stored.
+    :param n: `int`, default=5
+        Number of samples to annotate per phrase.
+    :param info: `tuple` of `str`, `DataFrame`
+        Tuple containing:
+        - Name of the column containing the phrase key
+        - DataFrame with the phrase info
+        The annotator will search the key-column for phrase matches.
+        The matched records will be displayed.
+
+    Returns
+    =======
+    :annotator: None
+    """
+
+    path = PATH_RESULTS / f"{name}.pkl"
+    if path.exists():
+        df_annotations = pd.read_pickle(path)
+    else:
+        df_annotations = _create_df_annotations()
+
+    for phrase in phrases:
+        if phrase in df_annotations.phrase.values:
+            continue
+        df_phrase = annotate(df, phrase, n, info=info)
+        if df_phrase.empty:
+            break
+        df_annotations = df_annotations.append(df_phrase, ignore_index=True)
+    df_annotations.to_pickle(path)
+    None
+
+
+def annotate(df, phrase, n, info=None):
+    df_annotations = _create_df_annotations()
+
+    while phrase != '.':
+        user = ''
+
+        if info:
+            qry = f"{info[0]} == @phrase"
+            phrase_info = info[1].query(qry).to_html(index=False, notebook=True)
+
+        regex = rf"\b{phrase}\b"
+        df_q = df.loc[df.body_.str.contains(regex, regex=True)]
+        if df_q.empty:
+            print("phrase not found as a word unit")
+            regex = phrase
+            df_q = df.loc[df.body_.str.contains(regex)]
+        if df_q.empty:
+            return _create_df_annotations(
+                [[phrase, None, None, pd.Timestamp(datetime.now())]]
+                )
+
+        results = len(df_q)
+        if results < n:
+            n = results
+
+        for smp, (idx, row) in enumerate(
+            df_q.reset_index().sample(n).iterrows()
+            ):
+            user = ''
+
+            content  = f"<h1>ANNOTATOR</h1>"
+            content += f"<h2>PHRASE: {phrase}</h2>"
+            if info:
+                content += f"<div class='container'>{phrase_info}</div>"
+            content += (
+                f"<h3>"
+                f"SAMPLE: {smp + 1} of {n} | "
+                f"SOURCE: {row.source} | "
+                f"RESULT: {idx + 1} of {results} | "
+                f"{row.id}"
+                f"</h3><hr>"
+                )
+            content += f"<h4>{row.title}</h4><hr>"
+
+            for p in row.body:
+                if re.search(regex, p):
+                    p = f"<p>{p}</p>"
+                    content += re.sub(
+                        regex,
+                        f"<mark><b>{phrase}</b></mark>",
+                        p,
+                        )
+
+            while user not in ['+', '-', '?', '.'] and not len(user) > 1:
+                html = f"<style>{STYLE}</style><div class='box'>{content}</div>"
+                display(HTML(html))
+                user = input(
+                    "Please annotate the sample above.\n"
+                    "[+] if the sample matches.\n"
+                    "[-] if the sample does not.\n"
+                    "[?] when unsure.\n"
+                    "(you can also input a new search phrase or '.' to exit)\n"
+                    "(NOTE: current phrase annotations will NOT be saved)\n"
+                    )
+                clear_output()
+
+            if user == '.' or len(user) > 1:
+                df_annotations = pd.DataFrame()
+                break
+
+            record = [
+                [phrase.strip(), row.id, user, pd.Timestamp(datetime.now())]
+                ]
+            df_annotations = df_annotations.append(
+                _create_df_annotations(data=record), ignore_index=True
+                )
+
+        if len(user) > 1:
+            phrase = user
+            continue
+
+        phrase = '.'
+
+    return df_annotations
+
+
+def _create_df_annotations(data=None):
+    cols = ['phrase', 'id', 'annotation', 'timestamp']
+    return pd.DataFrame(data, columns=cols)
+
+
+def phrase_explorer(df, phrase=None):
+    if not phrase:
+        phrase = input("Input phrase to search for:\n")
+
+    def explore(phrase):
+        df_q = df.query("body_.str.contains(@phrase)", engine='python')
+        results = len(df_q)
+
         for idx, row in df_q.reset_index().iterrows():
-            html = f"<h1>SOURCE: {row.source}</h1>"
+            html  = f"<h1>PHRASE EXPLORER</h1>"
+            html += f"<h2>PHRASE: {phrase} | SOURCE: {row.source}</h1>"
             html += f"<h3>RESULT: {idx + 1} of {results} | {row.id}</h3><hr>"
             html += f"<h4>{row.title}</h4><hr>"
 
             for p in row.body:
-                if search in p:
+                if phrase in p:
                     p = f"<p>{p}</p>"
-                    html += p.replace(search, f"<mark>{search}</mark>")
+                    html += p.replace(phrase, f"<mark><b>{phrase}</b></mark>")
 
-            html = f"{style}<div class='box'>{html}</div>"
+            html = f"<style>{STYLE}</style><div class='box'>{html}</div>"
             display(HTML(html))
             user = input(
-                "Press <enter> to continue "
-                "(you can also input a new search phrase or '.' to exit)"
+                "Press <enter> to go to next record "
+                "(you can also input a new phrase or '.' to exit)"
                 )
             clear_output()
             if user == '.':
-                return user
+                break
             if len(user) > 0:
                 return user
+
+        if df_q.empty:
+            clear_output()
+            print(f"Phrase '{phrase}' not found.")
         return '.'
 
-    while search != '.':
-        df_q = df.query("body_.str.contains(@search)", engine='python')
-        results = len(df_q)
-        search = explore(search, results)
+    while phrase != '.':
+        phrase = explore(phrase)
     return None
 
 
