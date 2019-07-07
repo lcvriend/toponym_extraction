@@ -8,7 +8,7 @@ import pandas as pd
 from IPython.display import HTML, display, clear_output
 
 # local
-from src.config import PATH_RESULTS
+from src.config import PATH_DATA_I, PATH_RESULTS
 
 
 STYLE = """
@@ -430,4 +430,19 @@ def most_common(data, attribute, n=10):
             else:
                 df = df.join(df_)
 
+    return df
+
+
+def load_lexisnexis_data():
+    """
+    Load all lexisnexis data into a single `DataFrame`.
+
+    Returns
+    =======
+    :load_lexisnexis_data: `DataFrame`
+    """
+
+    df = pd.DataFrame()
+    for pkl in PATH_DATA_I.glob('*_.pkl'):
+        df = df.append(pd.read_pickle(pkl))
     return df
