@@ -175,6 +175,55 @@ def _create_df_annotations(data=None):
     return pd.DataFrame(data, columns=cols)
 
 
+def section_explorer(df, phrase=None):
+    if not phrase:
+        phrase = input("Input section to search for:\n")
+
+    def explore(phrase):
+        df_q = df.query("section.str.contains(@phrase)", engine='python')
+        results = len(df_q)
+
+        for idx, row in df_q.reset_index().iterrows():
+            html  = f"<h1>SECTION EXPLORER</h1>"
+            html += (
+                f"<h2>"
+                f"SECTION: {row.section}"
+                f"</h2>"
+                )
+            html += (
+                f"<h3>"
+                f"RESULT: {idx + 1} of {results} | "
+                f"SOURCE: {row.source} | "
+                f"ID: {row.id}"
+                "</h3><hr>"
+                )
+            html += f"<h4>{row.title}</h4><hr>"
+
+            for p in row.body:
+                html += f"<p>{p}</p>"
+
+            html = f"<style>{STYLE}</style><div class='box'>{html}</div>"
+            display(HTML(html))
+            user = input(
+                "Press <enter> to go to next record "
+                "(you can also input a new section or '.' to exit)"
+                )
+            clear_output()
+            if user == '.':
+                break
+            if len(user) > 0:
+                return user
+
+        if df_q.empty:
+            clear_output()
+            print(f"Section '{phrase}' not found.")
+        return '.'
+
+    while phrase != '.':
+        phrase = explore(phrase)
+    return None
+
+
 def phrase_explorer(df, phrase=None):
     if not phrase:
         phrase = input("Input phrase to search for:\n")
