@@ -234,7 +234,13 @@ def phrase_explorer(df, phrase=None):
 
         for idx, row in df_q.reset_index().iterrows():
             html  = f"<h1>PHRASE EXPLORER</h1>"
-            html += f"<h2>PHRASE: {phrase} | SOURCE: {row.source}</h1>"
+            html += (
+                f"<h2>"
+                f"PHRASE: {phrase} | "
+                f"SOURCE: {row.source} | "
+                f"SECTION: {row.section}"
+                f"</h2>"
+                )
             html += f"<h3>RESULT: {idx + 1} of {results} | {row.id}</h3><hr>"
             html += f"<h4>{row.title}</h4><hr>"
 
