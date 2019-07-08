@@ -224,7 +224,31 @@ def section_explorer(df, phrase=None):
     return None
 
 
-def phrase_explorer(df, phrase=None):
+def phrase_explorer(df, phrase=None, unedited=False):
+    """
+    Explore phrases in the data.
+
+    Parameters
+    ==========
+    :param df: `DataFrame`
+        df containing the LexisNexis articles.
+
+    Optional key-word arguments
+    ===========================
+    :param phrase: `str`, default=None
+        Search phrase. If none is passed, user will be prompted.
+    :param unedited: `bool`, default=False
+        If True the explorer will search 'body' instead of the deduped 'body_'.
+
+    Returns
+    =======
+    :phrase explorer: None
+    """
+
+    df = df.copy()
+    if unedited:
+        df['body_'] = df.body
+        df['body_str'] = df.body.str.join('\n')
     if not phrase:
         phrase = input("Input phrase to search for:\n")
 
