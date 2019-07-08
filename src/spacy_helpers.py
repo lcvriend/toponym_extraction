@@ -22,7 +22,7 @@ def serialize_batch(nlp, batch, path_in=PATH_DATA_I, path_out=PATH_DATA_P):
     Add linguistic annotations to a batch of documents with spaCy.
     Then serialize them.
 
-    The documents are loaded from the 'body_' column of a pickled `DataFrame`.
+    Documents are loaded from the 'body_str' column of a pickled `DataFrame`.
 
     Parameters
     ==========
@@ -54,7 +54,7 @@ def serialize_batch(nlp, batch, path_in=PATH_DATA_I, path_out=PATH_DATA_P):
 
     df = pd.read_pickle(path_in / f"{batch}_.pkl")
     for idx, body in tqdm(
-        df.body_.iteritems(), desc=f"{batch:.<24}", total=len(df)
+        df.body_str.iteritems(), desc=f"{batch:.<24}", total=len(df)
         ):
         doc_id = f"{codify_batch(batch)}_{idx:03d}"
         doc = nlp(body)
