@@ -5,6 +5,7 @@ from unicodedata import normalize
 
 # third party
 import pandas as pd
+from tqdm import tqdm
 import xml.etree.ElementTree as ET
 
 
@@ -32,9 +33,10 @@ def docxs_to_df(path):
     if isinstance(path, str):
         path = Path(path)
 
+    n_articles = len(list(path.glob('*.docx')))
     articles = path.glob('*.docx')
     pre_df = list()
-    for a in articles:
+    for a in tqdm(articles, total=n_articles):
         row = docx_to_dict(a)
         pre_df.append(row)
 
