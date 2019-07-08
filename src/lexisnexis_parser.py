@@ -204,14 +204,14 @@ def standardize_df(
     ## Format
     This function creates a df containing the following columns:
 
-        01. id                       10. page
-        02. source                   11. length
-        03. title                    12. byline
-        04. body (as list)           13. copyright
-        05. body (as string)         14. folder
-        06. publication date         15. filename
-        07. load date                16. url
-        08. section
+        01. id                      09. section
+        02. source                  10. page
+        03. title                   11. length
+        04. body (as list)          12. byline
+        05. body (filtered)         13. copyright
+        06. body (as string)        14. folder
+        07. publication date        15. filename
+        08. load date               16. url
 
     Any columns missing in the input, will be added to the ouptut (`nan`).
     This format may be replaced completely (by passing `cols`).
@@ -240,7 +240,8 @@ def standardize_df(
 
     if not cols:
         cols = [
-            'id', 'source', 'title', 'body', 'body_',
+            'id', 'source', 'title',
+            'body', 'body_', 'body_str',
             'publication_date', 'load_date',
             'section', 'page', 'length',
             'byline', 'copyright',
