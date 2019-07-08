@@ -31,6 +31,9 @@ STYLE = """
     .box {
         border: 1px solid black;
     }
+    .container {
+        overflow: scroll;
+    }
     """
 
 
