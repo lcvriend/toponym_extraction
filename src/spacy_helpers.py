@@ -52,6 +52,9 @@ def serialize_batch(nlp, batch, path_in=PATH_DATA_I, path_out=PATH_DATA_P):
     if not path_batch.exists():
         path_batch.mkdir(parents=True)
 
+    for doc_file in path_batch.glob('*.spacy'):
+        doc_file.unlink()
+
     df = pd.read_pickle(path_in / f"{batch}_.pkl")
     for idx, body in tqdm(
         df.body_str.iteritems(), desc=f"{batch:.<24}", total=len(df)
