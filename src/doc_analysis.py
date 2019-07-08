@@ -95,11 +95,11 @@ def annotate(df, phrase, n, info=None):
             phrase_info = info[1].query(qry).to_html(index=False, notebook=True)
 
         regex = rf"\b{phrase}\b"
-        df_q = df.loc[df.body_.str.contains(regex, regex=True)]
+        df_q = df.loc[df.body_str.str.contains(regex, regex=True)]
         if df_q.empty:
             print("phrase not found as a word unit")
             regex = phrase
-            df_q = df.loc[df.body_.str.contains(regex)]
+            df_q = df.loc[df.body_str.str.contains(regex)]
         if df_q.empty:
             return _create_df_annotations(
                 [[phrase, None, None, pd.Timestamp(datetime.now())]]
@@ -128,7 +128,7 @@ def annotate(df, phrase, n, info=None):
                 )
             content += f"<h4>{row.title}</h4><hr>"
 
-            for p in row.body:
+            for p in row.body_:
                 if re.search(regex, p):
                     p = f"<p>{p}</p>"
                     content += re.sub(
@@ -253,7 +253,7 @@ def phrase_explorer(df, phrase=None, unedited=False):
         phrase = input("Input phrase to search for:\n")
 
     def explore(phrase):
-        df_q = df.query("body_.str.contains(@phrase)", engine='python')
+        df_q = df.query("body_str.str.contains(@phrase)", engine='python')
         results = len(df_q)
 
         for idx, row in df_q.reset_index().iterrows():
@@ -268,7 +268,7 @@ def phrase_explorer(df, phrase=None, unedited=False):
             html += f"<h3>RESULT: {idx + 1} of {results} | {row.id}</h3><hr>"
             html += f"<h4>{row.title}</h4><hr>"
 
-            for p in row.body:
+            for p in row.body_:
                 if phrase in p:
                     p = f"<p>{p}</p>"
                     html += p.replace(phrase, f"<mark><b>{phrase}</b></mark>")
