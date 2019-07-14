@@ -16,7 +16,7 @@ PATH_RESOURCES = PATH_HOME / 'resources'
 
 def load_ini(filename):
     # load parameters
-    ini = configparser.ConfigParser()
+    ini = configparser.ConfigParser(interpolation=None)
     ini.read(filename, encoding='utf-8')
     return ini
 
