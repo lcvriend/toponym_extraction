@@ -7,6 +7,9 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 
+# local
+from logic.config import PARAM
+
 
 def get_dataset(parameters, path_out):
     """
@@ -52,11 +55,9 @@ def get_dataset(parameters, path_out):
             paths[param] = path_file = path_out / Path(url).name
             print(f"{path_file.name:.<24}: ", end='', flush=True)
             if not path_file.is_file():
-                # download_from_url(url, path_out=path)
                 print('not found', flush=True)
                 not_downloaded.append(url)
             else:
-                # print(f"{path_name.name:.<24}: OK")
                 print('OK', flush=True)
     print(flush=True)
 
@@ -64,7 +65,7 @@ def get_dataset(parameters, path_out):
     if not_downloaded:
         print_title('download missing resources')
         for url in not_downloaded:
-            download_from_url(url, path_out=path)
+            download_from_url(url, path_out=path_out)
         print(flush=True)
 
     # Load the data into DataFrames
@@ -115,8 +116,9 @@ def get_dataset(parameters, path_out):
 
 
 def download_from_url(url, path_out=None):
+    headers = {'User-Agent': PARAM.project.user_agent}
     file_path = Path(url).name
-    r = requests.get(url, stream=True)
+    r = requests.get(url, headers=headers, stream=True)
     size = r.headers['Content-length']
 
     if not r.status_code == requests.codes.ok:
@@ -125,12 +127,14 @@ def download_from_url(url, path_out=None):
             f"Check if the provided url is still valid."
             )
     if path_out:
+        path_out.mkdir(parents=True, exist_ok=True)
         file_path = path_out / file_path
     with open(file_path, 'wb') as handle:
         iter_bytes = tqdm(
             r.iter_content(),
             desc=f"{file_path.name:.<24}",
             total=int(size),
+            ncols=200,
             )
         for data in iter_bytes:
             handle.write(data)
