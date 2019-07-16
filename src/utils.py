@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 
 # local
-from logic.config import PARAM
+from src.config import PARAM
 
 
 def get_dataset(parameters, path_out):
