@@ -14,9 +14,7 @@ dependencies:
 - geopy=1.20.0
 - flake8 # maybe
 - spacy
-- plotly=3.10.0 # maybe
-- dash=0.43.0 # maybe
 - pyshp=2.1.0
 - beautifulsoup4=4.7.1
 - lxml
-- phlya adjusttext
+- adjusttext
