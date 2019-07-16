@@ -12,6 +12,7 @@ PATH_DATA_I    = PATH_DATA / '01_interim'
 PATH_DATA_P    = PATH_DATA / '02_processed'
 PATH_RESULTS   = PATH_HOME / 'results'
 PATH_RESOURCES = PATH_HOME / 'resources'
+PATH_SHAPES    = PATH_RESOURCES / 'shapefiles'
 
 
 def load_ini(filename):
