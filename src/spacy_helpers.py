@@ -57,7 +57,7 @@ def serialize_batch(nlp, batch, path_in=PATH_DATA_I, path_out=PATH_DATA_P):
 
     df = pd.read_pickle(path_in / f"{batch}_.pkl")
     for idx, body in tqdm(
-        df.body_str.iteritems(), desc=f"{batch:.<24}", total=len(df)
+        df.body_str.iteritems(), desc=f"{batch:.<24}", total=len(df), ncols=80
         ):
         doc_id = f"{codify_batch(batch)}_{idx:03d}"
         doc = nlp(body)
