@@ -11,6 +11,7 @@ dependencies:
 - matplotlib=3.1.0
 - pandas=0.24.2
 - geopandas=0.5.0
+- descartes=1.1.0
 - geopy=1.20.0
 - flake8 # maybe
 - spacy
