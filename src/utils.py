@@ -115,12 +115,13 @@ def get_dataset(parameters, path_out):
     return None
 
 
-def download_from_url(url, filename=None, path_out=None):
+def download_from_url(url, filename=None, path_out=None, chunk_size=1024):
     headers = {'User-Agent': PARAM.project.user_agent}
     if not filename:
         filename = Path(url).name
     r = requests.get(url, headers=headers, stream=True)
-    size = r.headers['Content-length']
+    size = int(r.headers['Content-length'])
+    bars = int(size / chunk_size)
 
     if not r.status_code == requests.codes.ok:
         raise requests.exceptions.HTTPError(
@@ -131,14 +132,15 @@ def download_from_url(url, filename=None, path_out=None):
         path_out.mkdir(parents=True, exist_ok=True)
         filename = path_out / filename
     with open(filename, 'wb') as handle:
-        iter_bytes = tqdm(
-            r.iter_content(),
+        chunk = tqdm(
+            r.iter_content(chunk_size=chunk_size),
             desc=f"{filename.name:.<24}",
-            total=int(size),
-            ncols=200,
+            total=bars,
+            unit='kb',
             )
-        for data in iter_bytes:
-            handle.write(data)
+        for data in chunk:
+            if data:
+                handle.write(data)
     return None
 
 
