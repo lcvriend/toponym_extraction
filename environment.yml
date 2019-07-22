@@ -13,6 +13,7 @@ dependencies:
 - geopandas=0.5.0
 - descartes=1.1.0
 - geopy=1.20.0
+- fiona=1.8.6
 - flake8 # maybe
 - spacy
 - pyshp=2.1.0
