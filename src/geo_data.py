@@ -18,6 +18,7 @@ from .utils import download_from_url
 def load_geonames(language=PARAM.project.language):
     """
     Load data from the geonames dataset and return as `DataFrame`.
+    Keep only places with the largest pop if duplicated names occur.
 
     Optional key-word arguments
     ===========================
@@ -97,6 +98,14 @@ def load_geonames(language=PARAM.project.language):
     df = df[cols]
     df['alt'] = df.alternate_name.notna()
     df['alternate_name'] = df.alternate_name.fillna(df.name)
+
+    df = df.sort_values(
+        ['alternate_name', 'population'],
+        ascending=False
+        ).drop_duplicates(
+            subset='alternate_name',
+            keep='first'
+            )
 
     return df
 
