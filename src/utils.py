@@ -115,9 +115,10 @@ def get_dataset(parameters, path_out):
     return None
 
 
-def download_from_url(url, path_out=None):
+def download_from_url(url, filename=None, path_out=None):
     headers = {'User-Agent': PARAM.project.user_agent}
-    file_path = Path(url).name
+    if not filename:
+        filename = Path(url).name
     r = requests.get(url, headers=headers, stream=True)
     size = r.headers['Content-length']
 
@@ -128,11 +129,11 @@ def download_from_url(url, path_out=None):
             )
     if path_out:
         path_out.mkdir(parents=True, exist_ok=True)
-        file_path = path_out / file_path
-    with open(file_path, 'wb') as handle:
+        filename = path_out / filename
+    with open(filename, 'wb') as handle:
         iter_bytes = tqdm(
             r.iter_content(),
-            desc=f"{file_path.name:.<24}",
+            desc=f"{filename.name:.<24}",
             total=int(size),
             ncols=200,
             )
