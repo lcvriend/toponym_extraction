@@ -12,7 +12,9 @@ Doc.set_extension('id', default=None)
 
 def fetch_docs(path, vocab):
     l = len(list(path.glob('*.spacy')))
-    for doc in tqdm(path.glob('*.spacy'), desc=f"{path.name:.<24}", total=l):
+    for doc in tqdm(
+        path.glob('*.spacy'), desc=f"{path.name:.<24}", ncols=80, total=l
+        ):
         with open(doc, 'rb') as f:
             yield Doc(vocab).from_bytes(f.read())
 
