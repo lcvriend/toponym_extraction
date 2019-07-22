@@ -301,13 +301,15 @@ def phrase_explorer(df, phrase=None, unedited=False):
 def basic_stats(doc):
     """
     Extract some basic statistics from a spaCy `Doc` instance as `dict`:
-    - n_sentences: number of sentences
-    - n_entities:  number of entities
-    - n_tokens:    number of tokens
-    - n_stopwords: number of stopwords
+    - n_tokens:          number of tokens
+    - n_stopwords:       number of stopwords
+    - n_words:           number of tokens - number of stopwords
+    - n_sentences:       number of sentences
+    - n_entities:        number of entities
+    - n_unique_entities: number of unique entities
 
-    - count per part of speech attributes
-    - count per entity type
+    - counts per part of speech attribute
+    - counts per entity type
 
     Parameters
     ==========
@@ -319,11 +321,13 @@ def basic_stats(doc):
     """
 
     stats = dict()
+    stats['id'] = doc._.id
     stopwords = 0
     sen_counts = Counter() # sentences
     pos_counts = Counter() # parts of speech
     ent_counts = Counter() # entities
     ent_unique = dict()
+    ent_unique['_total'] = set()
 
     for token in doc:
         if token.is_stop:
@@ -332,20 +336,25 @@ def basic_stats(doc):
     for ent in doc.ents:
         ent_counts['n_entities'] += 1
         ent_counts[f"ent_{ent.label_}"] += 1
-        if ent.label_ in ent_unique.keys():
-            ent_unique[ent.label_].add(ent.text)
-        else:
-            ent_unique[ent.label_] = set(ent.text)
+        if ent.label_ not in ent_unique.keys():
+            ent_unique[ent.label_] = set()
+        ent_unique['_total'].add(ent.text)
+        ent_unique[ent.label_].add(ent.text)
+
     for sent in doc.sents:
         sen_counts['n_sentences'] += 1
 
     stats['n_tokens'] = len(doc)
     stats['n_stopwords'] = stopwords
+    stats['n_words'] = stats['n_tokens'] - stats['n_stopwords']
     stats.update(sen_counts)
     stats.update(pos_counts)
     stats.update(ent_counts)
+    stats['n_unique_entities'] = len(ent_unique['_total'])
     for key in ent_unique:
-        stats[f"uniq_ent_{key}"] = len(ent_unique[key])
+        if key == '_total':
+            continue
+        stats[f"unique_ent_{key}"] = len(ent_unique[key])
 
     return stats
 
