@@ -35,7 +35,6 @@ def load_geonames(language=PARAM.project.language):
     path_geonames = PATH_RESOURCES / 'geonames'
     dfs = {i.stem[3:]:pd.read_pickle(i) for i in path_geonames.glob('*.pkl')}
 
-    # process the alts dataset
     ids = set(dfs['cities'].geoname_id)
     dfs['alts'] = dfs['alts'].query("geoname_id in @ids")
     if language:
