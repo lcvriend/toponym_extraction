@@ -37,6 +37,27 @@ STYLE = """
     """
 
 
+def get_positives(df):
+    """
+    Return a list of phrases that have at least one positive annotation.
+    Input is a df_annotations `DataFrame` created by the annotator.
+
+    Parameters
+    ==========
+    :param df: `DataFrame`
+        df_annotations `DataFrame` created by the annotator.
+
+    Returns
+    =======
+    :get_positives: `list`
+    """
+
+    df = df.copy()
+    df['positive'] = df.annotation == '+'
+    df_positives = df.groupby('phrase')['positive'].any()
+    return list(df_positives[df_positives].index)
+
+
 def annotator(df, phrases, name='df_annotations', n=5, info=None):
     """
     Annotate search results.
