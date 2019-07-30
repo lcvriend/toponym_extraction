@@ -1,5 +1,6 @@
 # standard library
 import re
+from collections import namedtuple
 from datetime import datetime
 
 # third party
@@ -8,6 +9,133 @@ from IPython.display import HTML, display, clear_output
 
 # local
 from src.config import PATH_RESULTS
+
+
+class Evaluator():
+    Annotation = namedtuple('Annotation', ['id', 'idx', 'type'])
+
+    def __init__(self):
+        self.annotations = list()
+
+    def __call__(self, doc):
+        lines = HTML_from_doc(doc).html_lines
+        out = self.interface(doc._.id, lines)
+        return out
+
+    def interface(self, id, lines):
+        for html in lines:
+            display(HTML(html))
+
+            while True:
+                idx = input('idx: ')
+                if idx and idx != '.':
+                    try:
+                        int(idx)
+                        annotation = None
+                        while annotation not in ['+', '-']:
+                            annotation = input(
+                                '[+] false positve, [-] false negative: '
+                                )
+                        self.annotations.append(
+                            self.Annotation(id, idx, annotation)
+                            )
+                    except ValueError:
+                        pass
+                    clear_output()
+                    display(HTML(html))
+                else:
+                    break
+
+            clear_output()
+            if idx == '.':
+                return '.'
+        return None
+
+    def to_dataframe(self):
+        return pd.DataFrame(self.annotations)
+
+
+class HTML_from_doc():
+    Token = namedtuple('Token', ['text', 'idx', 'ent'])
+    class_name = 'a'
+    style = (
+        "<style>"
+            "* {"
+                "box-sizing: border-box;"
+            "}"
+            f"table.{class_name},"
+            f"th.{class_name},"
+            f"td.{class_name} {{"
+                "border-right: 1px solid black;"
+            "}"
+            f"table.{class_name} {{"
+                "margin-bottom: 24px !important;"
+            "}"
+        "</style>"
+        )
+
+    def __init__(self, doc, char_limit=80):
+        self.doc = doc
+        self.char_limit = char_limit
+        self.lines = self.doc_to_lines(doc, char_limit)
+        self.max_lines = max(self.lines)
+        self.html_lines = self.lines_to_html_lines(self.lines)
+
+    def lines_to_html_lines(self, lines):
+        def cell(x):
+            return f"<td class='{self.class_name}'>{x}</td>"
+
+        def concat(lst):
+            return ''.join(lst)
+
+        html_lines = list()
+        for line in lines:
+            indeces = [cell(token.idx) for token in lines[line]]
+            ents = [cell(token.ent) for token in lines[line]]
+            texts = [
+                cell(token.text) if token.ent == ''
+                else cell('<mark>' + token.text + '</mark>')
+                for token in lines[line]
+                ]
+
+            html = (
+                f"{self.style}"
+                f"<h3>{self.doc._.id}</h3>"
+                f"<table class='{self.class_name}'>"
+                    "<tr>"
+                        f"<th rowspan='3' class='{self.class_name}'>"
+                        f"{line:02} / {self.max_lines}</th>"
+                        f"{concat(ents)}"
+                    "</tr>"
+                    "<tr>"
+                        f"{concat(texts)}"
+                    "</tr>"
+                    "<tr>"
+                        f"{concat(indeces)}"
+                    "</tr>"
+                "</table>"
+            )
+            html_lines.append(html)
+        return html_lines
+
+    @classmethod
+    def doc_to_lines(cls, doc, char_limit):
+        lines = dict()
+        line = list()
+        line_length = 0
+        line_idx = 0
+
+        for token in doc:
+            text = token.text if token.text != '\n' else '^'
+            line_length += len(text)
+            line.append(cls.Token(text, token.i, token.ent_type_))
+
+            if line_length > char_limit:
+                line_length = 0
+                lines[line_idx] = line
+                line_idx += 1
+                line = list()
+        return lines
 
 
 STYLE = """
