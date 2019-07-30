@@ -19,6 +19,11 @@ def fetch_docs(path, vocab):
             yield Doc(vocab).from_bytes(f.read())
 
 
+def fetch_doc(path, vocab):
+    with open(path, 'rb') as f:
+        return Doc(vocab).from_bytes(f.read())
+
+
 def serialize_batch(nlp, batch, path_in=PATH_DATA_I, path_out=PATH_DATA_P):
     """
     Add linguistic annotations to a batch of documents with spaCy.
