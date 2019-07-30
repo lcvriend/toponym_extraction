@@ -12,6 +12,10 @@ from src.config import PATH_RESULTS
 
 
 class Evaluator():
+    """
+    Evaluate accuracy of the ner in a spacy Doc.
+    """
+
     Annotation = namedtuple('Annotation', ['id', 'idx', 'type'])
 
     def __init__(self):
@@ -56,6 +60,10 @@ class Evaluator():
 
 
 class HTML_from_doc():
+    """
+    Separate tokens, idx and ner of a spaCy `Doc` into lines and render as html.
+    """
+
     Token = namedtuple('Token', ['text', 'idx', 'ent'])
     class_name = 'a'
     style = (
@@ -211,7 +219,7 @@ def annotator(df, phrases, name='df_annotations', n=5, info=None):
             break
         df_annotations = df_annotations.append(df_phrase, ignore_index=True)
     df_annotations.to_pickle(path)
-    None
+    return None
 
 
 def annotate(df, phrase, n, info=None):
