@@ -172,6 +172,143 @@ STYLE = """
     """
 
 
+class Annotator():
+    Annotation = namedtuple(
+        'Annotation', ['phrase', 'id', 'annotation', 'timestamp']
+        )
+
+    def __init__(self, data, info=None, n=5):
+        self.data = data
+        self.info = info
+        self.n = n
+        self.annotations = list()
+
+    def __call__(self, phrases):
+        for phrase in phrases:
+            if phrase in self.annotated_phrases:
+                continue
+            user = self.annotate(phrase)
+            if user is '.':
+                break
+        return None
+
+    @property
+    def annotated_phrases(self):
+        return [annotation.phrase for annotation in self.annotations]
+
+    def annotate(self, phrase):
+        search = PhraseSearch(phrase, self.data, info=self.info, n=self.n)
+        for sample, idx, row, html in search():
+            user = ''
+            while user not in ['+', '-', '?', '.']:
+                display(HTML(html))
+                user = input(
+                    "Please annotate the sample above:\n"
+                    "[+] if the sample matches.\n"
+                    "[-] if the sample does not.\n"
+                    "[?] when unsure.\n"
+                    "[.] to exit (current phrase will NOT be saved).s\n"
+                    )
+                clear_output()
+
+            if user == '.':
+                return user
+
+            self.annotations.append(
+                self.Annotation(phrase, row.id, user, datetime.now())
+                )
+        return None
+
+    def to_dataframe(self):
+        return pd.DataFrame(self.annotations)
+
+
+class PhraseSearch():
+    def __init__(self, phrase, data, info=None, n=0):
+        self.phrase = phrase
+        self.regex = rf"\b{phrase}\b"
+        self.data = data
+        self.info = info
+        self.n = n
+
+    @property
+    def results(self):
+        results = self.data.loc[
+            self.data.body_str.str.contains(self.regex, regex=True)
+            ].reset_index()
+        if results.empty:
+            print("phrase not found as a word unit")
+            results = self.data.loc[
+                self.data.body_str.str.contains(self.phrase)
+                ].reset_index()
+        return results
+
+    @property
+    def n_results(self):
+        return len(self.results)
+
+    @property
+    def n_samples(self):
+        if self.n_results < self.n:
+            return self.n_results
+        return self.n
+
+    @property
+    def phrase_info(self):
+        if self.info:
+            qry = f"{self.info[0]} == @self.phrase"
+            return self.info[1].query(qry)
+        return None
+
+    def __call__(self):
+        if self.n:
+            for sample, (idx, row) in enumerate(
+                self.results.sample(self.n_samples).iterrows()
+                ):
+                html = self.get_html(sample + 1, idx, row)
+                yield sample, idx, row, html
+        else:
+            for idx, row in self.results.iterrows():
+                html = self.get_html(None, idx, row)
+                yield sample, idx, row, html
+
+    def get_html(self, sample, idx, row):
+        info_html = ''
+        if self.phrase_info is not None:
+            info_html = self.phrase_info.to_html(
+                index=False,
+                notebook=True
+                )
+            info_html = f"<div class='container'>{info_html}</div>"
+
+        sample_html = ''
+        if sample:
+            sample_html += f"SAMPLE: {sample} of {self.n_samples} | "
+
+        content = (
+            f"<h1>ANNOTATOR</h1>"
+            f"<h2>PHRASE: {self.phrase}</h2>"
+            f"{info_html}"
+            f"<h3>"
+            f"{sample_html}"
+            f"SOURCE: {row.source} | "
+            f"RESULT: {idx + 1} of {self.n_results} | "
+            f"{row.id}"
+            f"</h3><hr>"
+            f"<h4>{row.title}</h4><hr>"
+            )
+
+        for p in row.body_:
+            if re.search(self.regex, p):
+                p = f"<p>{p}</p>"
+                content += re.sub(
+                    self.regex,
+                    f"<mark><b>{self.phrase}</b></mark>",
+                    p,
+                    )
+        return f"<style>{STYLE}</style><div class='box'>{content}</div>"
+
+
 def annotator(df, phrases, name='df_annotations', n=5, info=None):
     """
     Annotate search results.
