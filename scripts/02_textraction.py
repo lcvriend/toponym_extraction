@@ -72,7 +72,7 @@ for batch in LEXISNEXIS.batches:
 
     # remove duplicate (>2) paragraphs
     dupes = {p:paragraphs[p] for p in paragraphs if paragraphs[p] > 2}
-    df['body_'] = df['body'].apply(lambda paragraphs: [p for p in paragraphs if p not in dupes])
+    df['body_'] = df['body'].apply(lambda ps: [p for p in ps if p not in dupes])
 
     # add body as string
     df['body_str'] = df.body_.str.join('\n')
