@@ -531,7 +531,10 @@ def section_explorer(df, phrase=None):
             for p in row.body:
                 html += f"<p>{p}</p>"
 
-            html = f"<style>{STYLE}</style><div class='box'>{html}</div>"
+            html = (
+                f"<style>{PhraseSearch.style}</style>"
+                f"<div class='box'>{html}</div>"
+            )
             display(HTML(html))
             user = input(
                 "Press <enter> to go to next record "
