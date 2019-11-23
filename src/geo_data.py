@@ -10,15 +10,19 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 # local
-from .config import PATH_RESOURCES, PARAM
-from .utils import download_from_url
+from src.config_ import PATHS, PROJECT
+from src.utils import download_from_url
 
 
 # GeoNames
-def load_geonames(language=PARAM.project.language):
+def load_geonames(language=PROJECT.language):
     """
     Load data from the geonames dataset and return as `DataFrame`.
     Keep only places with the largest pop if duplicated names occur.
+
+    A prerequisite is that the dataset is stored in the location
+    set by `PATHS.resources`. This location can be defined in 'config.ini'.
+    The dataset itself can be found on 'http://www.geonames.org/'.
 
     Optional key-word arguments
     ===========================
@@ -32,7 +36,7 @@ def load_geonames(language=PARAM.project.language):
     :load_geonames: `DataFrame`
     """
 
-    path_geonames = PATH_RESOURCES / 'geonames'
+    path_geonames = PATHS.resources / 'geonames'
     dfs = {i.stem[3:]:pd.read_pickle(i) for i in path_geonames.glob('*.pkl')}
 
     ids = set(dfs['cities'].geoname_id)

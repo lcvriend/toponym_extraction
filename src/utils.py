@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 
 # local
-from src.config import PARAM
+from src.config_ import PROJECT
 
 
 def get_dataset(parameters, path_out):
@@ -116,7 +116,7 @@ def get_dataset(parameters, path_out):
 
 
 def download_from_url(url, filename=None, path_out=None, chunk_size=1024):
-    headers = {'User-Agent': PARAM.project.user_agent}
+    headers = {'User-_Agent': PROJECT.user_agent}
     if not filename:
         filename = Path(url).name
     r = requests.get(url, headers=headers, stream=True)

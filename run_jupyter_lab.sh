@@ -1,3 +1,4 @@
 #!/bin/bash
-conda activate place-extraction
+clear
+source activate place-extraction
 jupyter lab

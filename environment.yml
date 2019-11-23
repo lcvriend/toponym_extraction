@@ -2,6 +2,7 @@ name: place-extraction
 channels:
 - conda-forge
 - defaults
+- lcvriend
 dependencies:
 - python=3.7
 - tqdm
@@ -20,3 +21,4 @@ dependencies:
 - beautifulsoup4=4.7.1
 - lxml
 - adjusttext
+- humannotator

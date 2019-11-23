@@ -5,7 +5,7 @@ from collections import Counter
 import pandas as pd
 
 # local
-from src.config import PATH_DATA_I
+from src.config_ import PATHS
 
 
 def basic_stats(doc):
@@ -176,6 +176,7 @@ def most_common(data, attribute, n=10):
             else:
                 df = df.join(df_)
 
+    df.index.name = 'ranking'
     return df
 
 
@@ -210,6 +211,6 @@ def load_lexisnexis_data():
     """
 
     df = pd.DataFrame()
-    for pkl in PATH_DATA_I.glob('*_.pkl'):
+    for pkl in PATHS.data_int.glob('*_.pkl'):
         df = df.append(pd.read_pickle(pkl))
-    return df
+    return df.set_index('id')

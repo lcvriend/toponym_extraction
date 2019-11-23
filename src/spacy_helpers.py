@@ -4,8 +4,8 @@ from tqdm import tqdm
 from spacy.tokens import Doc
 
 # local
-from .config import PATH_DATA_I, PATH_DATA_P
-from .lexisnexis_parser import codify_batch
+from src.config_ import PATHS
+from src.lexisnexis_parser import codify_batch
 
 Doc.set_extension('id', default=None)
 
@@ -24,7 +24,12 @@ def fetch_doc(path, vocab):
         return Doc(vocab).from_bytes(f.read())
 
 
-def serialize_batch(nlp, batch, path_in=PATH_DATA_I, path_out=PATH_DATA_P):
+def serialize_batch(
+    nlp,
+    batch,
+    path_in=PATHS.data_int,
+    path_out=PATHS.data_prc
+):
     """
     Add linguistic annotations to a batch of documents with spaCy.
     Then serialize them.
