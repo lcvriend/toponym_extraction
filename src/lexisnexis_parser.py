@@ -37,8 +37,11 @@ def docxs_to_df(path):
     articles = path.glob('*.docx')
     pre_df = list()
     for a in tqdm(articles, total=n_articles):
-        row = docx_to_dict(a)
-        pre_df.append(row)
+        try:
+            row = docx_to_dict(a)
+            pre_df.append(row)
+        except zipfile.BadZipFile:
+            print('Bad docx (did not parse): ', a)
 
     df = pd.DataFrame(pre_df)
     df.columns = [format_colname(column) for column in df.columns]
@@ -248,7 +251,7 @@ def standardize_df(
             'section', 'page', 'length',
             'byline', 'copyright',
             'folder', 'filename', 'url',
-            ]
+        ]
     if extend:
         cols.extend(extend)
     if not 'id' in cols:
@@ -267,7 +270,7 @@ def standardize_df(
     # add id
     df['id'] = df.apply(
         lambda row: f"{codify_batch(batch)}_{row.name:04d}", axis=1
-        )
+    )
 
     df_out.update(df)
 
@@ -275,7 +278,7 @@ def standardize_df(
     dtypes = df.dtypes.to_dict()
     df_out = df_out.astype(
         {col:dtypes[col] for col in dtypes if col in df_out.columns}
-        )
+    )
     return df_out
 
 
@@ -343,7 +346,7 @@ def split_page_from_section(df, split_on=';'):
     colnames = {0: 'section', 1: 'page'}
     section_page = df.section.str.rsplit(
         split_on, n=1, expand=True
-        ).rename(columns=colnames)
+    ).rename(columns=colnames)
     df = df.drop('section', axis=1).join(section_page)
     df['section'] = df['section'].str.lower().str.replace('| ', '', regex=False)
     df['page'] = df['page'].str.split('. ').str[1].astype('int')
