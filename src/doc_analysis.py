@@ -204,6 +204,7 @@ def get_positives(df):
 def load_lexisnexis_data():
     """
     Load all lexisnexis data into a single `DataFrame`.
+    Skips any files starting with '_'.
 
     Returns
     =======
@@ -211,6 +212,8 @@ def load_lexisnexis_data():
     """
 
     df = pd.DataFrame()
-    for pkl in PATHS.data_int.glob('*_.pkl'):
-        df = df.append(pd.read_pickle(pkl))
+    for pkl in PATHS.data_int.glob('*.pkl'):
+        if pkl.name.startswith('_'):
+            continue
+        df = df.append(pd.read_pickle(pkl), sort=False)
     return df.set_index('id')
