@@ -25,13 +25,16 @@ some additional processing:
 3. The df is standardized (only specified metadata is kept).
 4. The queries defined in 'config.ini' under [LEXISNEXIS] are performed.
 
-Finally, the processed dataset is stored in PATHS.data_int.
+Finally, the processed dataset is stored in PATHS.data_int. The raw data, the duplicate paragraphs and the records that were removed through the queries are also stored in separate files starting with an underscore.
 """
 
 
 # standard libray
+import sys
 import locale
 from collections import Counter
+
+sys.path.insert(0, '../')
 locale.setlocale(locale.LC_ALL, 'nl_NL.utf8')
 
 # third party
@@ -51,31 +54,13 @@ for batch in LEXISNEXIS.batches:
     # save original parsed data
     path_raw = PATHS.data_raw / batch
     df = docxs_to_df(path_raw)
-    df = df.drop_duplicates(subset=['title', 'length'], keep='first')
-    df.to_pickle(PATHS.data_int / f'{batch}.pkl')
+    df.to_pickle(PATHS.data_int / f'_{batch}_raw.pkl')
 
     # separate section and page
     df = split_page_from_section(df)
 
     # extract length as integer
     df['length'] = df.length.str.split(' ').str[0].astype('int')
-
-    # count occurrence of paragraphs
-    paragraphs = Counter()
-    for article in df.body.values:
-        for p in article:
-            paragraphs[p] += 1
-
-    dupes = {p:paragraphs[p] for p in paragraphs if paragraphs[p] > 1}
-    df_dupes = pd.DataFrame.from_dict(dupes, orient='index', columns=['count'])
-    df_dupes.to_pickle(PATHS.data_int / f"{batch}_paragraph_dupes.pkl")
-
-    # remove duplicate (>2) paragraphs
-    dupes = {p:paragraphs[p] for p in paragraphs if paragraphs[p] > 2}
-    df['body_'] = df['body'].apply(lambda ps: [p for p in ps if p not in dupes])
-
-    # add body as string
-    df['body_str'] = df.body_.str.join('\n')
 
     # convert date strings to dates
     df['load_date'] = pd.to_datetime(df['load_date'])
@@ -85,11 +70,34 @@ for batch in LEXISNEXIS.batches:
         format='%d %B %Y %A',
     )
 
+    # drop duplicate rows
+    subset = ['title', 'publication_date', 'section']
+    df = df.drop_duplicates(subset=subset, keep='first')
+
+    # count occurrence of paragraphs
+    paragraphs = Counter()
+    for article in df.body.values:
+        for p in article:
+            paragraphs[p] += 1
+
+    dupes = {p:paragraphs[p] for p in paragraphs if paragraphs[p] > 1}
+    df_dupes = pd.DataFrame.from_dict(dupes, orient='index', columns=['count'])
+    df_dupes.to_pickle(PATHS.data_int / f"_{batch}_paragraph_dupes.pkl")
+
+    # remove duplicate (>2) paragraphs
+    dupes = {p:paragraphs[p] for p in paragraphs if paragraphs[p] > 2}
+    df['body_'] = df['body'].apply(lambda ps: [p for p in ps if p not in dupes])
+
+    # add body as string
+    df['body_str'] = df.body_.str.join('\n')
+
     # standardize
     df = standardize_df(df, batch)
 
     # remove items
-    df = df.query(' and '.join(LEXISNEXIS.queries))
+    df_out = df.query(' and '.join(LEXISNEXIS.queries))
+    df_removed = df.loc[~df.index.isin(df_out.index)]
 
-    # save file
-    df.to_pickle(PATHS.data_int / f'{batch}_.pkl')
+    # save files
+    df_out.to_pickle(PATHS.data_int / f'{batch}.pkl')
+    df_removed.to_pickle(PATHS.data_int / f'_{batch}_removed.pkl')
