@@ -13,7 +13,7 @@ Doc.set_extension('id', default=None)
 def fetch_docs(path, vocab):
     l = len(list(path.glob('*.spacy')))
     for doc in tqdm(
-        path.glob('*.spacy'), desc=f"{path.name:.<24}", ncols=120, total=l
+        path.glob('*.spacy'), desc=f"{path.name:.<24}", ncols=80, total=l
         ):
         with open(doc, 'rb') as f:
             yield Doc(vocab).from_bytes(f.read())
@@ -67,7 +67,7 @@ def serialize_batch(
     for doc_file in path_batch.glob('*.spacy'):
         doc_file.unlink()
 
-    df = pd.read_pickle(path_in / f"{batch}_.pkl")
+    df = pd.read_pickle(path_in / f"{batch}.pkl")
     for idx, body in tqdm(
         df.body_str.iteritems(), desc=f"{batch:.<24}", total=len(df), ncols=80
         ):
