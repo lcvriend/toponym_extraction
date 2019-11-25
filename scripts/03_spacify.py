@@ -3,7 +3,12 @@ SPACIFY THE LEXISNEXIS ARTICLES
 ===============================
 
 This script will serialize the LexisNexis articles. The resulting spaCy `Docs`
-will be stored
+will be stored in PATHS.data_prc. After processing all the files, an aggregated
+count will be performed on all entities and all lemmas. This counting procedure
+will be done twice: once counting every occurrence, and once counting entities
+and lemmas only once per article. These results will be stored in PATHS.results.
+It may happen that certain lemmas/entities fail to be counted. These will be
+stored in PATHS.results as well.
 """
 
 # standard library
