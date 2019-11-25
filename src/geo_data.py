@@ -114,9 +114,11 @@ def load_geonames(language=PROJECT.language):
 
 
 # REST_countries
-def load_rest_countries(language=PARAM.project.language, alts_json=None):
+def load_rest_countries(language=PROJECT.language, alts_json=None):
     """
     Load countries from 'https://restcountries.eu' and return data as dict.
+    The function will first check PATHS.resources / 'rest_countries' for json.
+    If file does not exist, it will load it from the url and then store it.
 
     Translations
     ============
@@ -150,6 +152,14 @@ def load_rest_countries(language=PARAM.project.language, alts_json=None):
     :load_rest_countries: `dict`
     """
 
+    path = PATHS.resources / 'rest_countries/rest_countries.json'
+
+    if path.exists():
+        with open(path, 'r', encoding='utf8') as f:
+            return json.load(f)
+    else:
+        path.parent.mkdir(parents=True, exist_ok=True)
+
     r = requests.get('https://restcountries.eu/rest/v2/all')
     r.raise_for_status()  # make sure requests raises an error if it fails
     data = r.json()
@@ -171,6 +181,9 @@ def load_rest_countries(language=PARAM.project.language, alts_json=None):
         for key in alts:
             for alt in alts[key]:
                 countries[alt] = countries[key]
+
+    with open(path, 'w', encoding='utf8') as f:
+        json.dump(rest, f, indent=4, sort_keys=True)
 
     return countries
 
