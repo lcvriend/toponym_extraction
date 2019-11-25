@@ -32,8 +32,10 @@ Finally, the processed dataset is stored in PATHS.data_int. The raw data, the du
 # standard libray
 import sys
 import locale
+import time
 from collections import Counter
 
+start = time.time()
 sys.path.insert(0, '../')
 locale.setlocale(locale.LC_ALL, 'nl_NL.utf8')
 
@@ -101,3 +103,6 @@ for batch in LEXISNEXIS.batches:
     # save files
     df_out.to_pickle(PATHS.data_int / f'{batch}.pkl')
     df_removed.to_pickle(PATHS.data_int / f'_{batch}_removed.pkl')
+
+end = time.time()
+print(f"Finished in: {end - start}s")

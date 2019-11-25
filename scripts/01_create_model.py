@@ -56,7 +56,12 @@ The model itself will be stored in the PATHS.model folder.
 
 # standard library
 import json
+import sys
+import time
 from itertools import combinations
+
+start = time.time()
+sys.path.insert(0, '../')
 
 # third party
 import pandas as pd
@@ -76,14 +81,20 @@ from src.geo_data import (
 ### Prepare geo entities
 # load datasets
 alts_path = PATHS.parameters / 'alts_countries.json'
+print('loading RESTcountries')
 countries = load_rest_countries(language='nl', alts_json=alts_path)
+print('loading geonames')
 geonames = load_geonames()
 
 # remove geonames that are also country names and store the table
 geonames = geonames.query("alternate_name not in @countries")
-geonames.to_pickle(PATHS.parameters / 'geonames/df_geonames.pkl')
+path = PATHS.resources / 'geonames/df_geonames.pkl'
+if not path.exists():
+    path.mkdir(parents=True, exist_ok=True)
+geonames.to_pickle(path)
 
 # create topography
+print('creating topography')
 topography = {k:getattr(MODEL, k) for k in MODEL._fields}
 topography = {k:geonames.query(v).alternate_name for k, v in topography.items()}
 topography['countries'] = countries
@@ -109,7 +120,7 @@ for key1, key2 in list(combinations(place_names, r=2)):
 
 path = PATHS.parameters / 'duplicate_place_names.json'
 with open(path, 'w', encoding='utf8') as f:
-    json.dump(problems, f, indent=4))
+    json.dump(problems, f, indent=4)
 
 
 ### Select topography based on annotation results
@@ -129,9 +140,13 @@ for key in topography:
 
 
 ### Create model
+print('building model')
 nlp = spacy.load('nl', disable=['ner'])
 ruler = EntityRuler(nlp)
 for label in topography:
     ruler.add_patterns(topography[label])
 nlp.add_pipe(ruler)
 nlp.to_disk(PATHS.model)
+
+end = time.time()
+print(f"Finished in: {end - start}s")

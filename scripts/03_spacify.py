@@ -14,6 +14,11 @@ stored in PATHS.results as well.
 # standard library
 import json
 import pickle
+import sys
+import time
+
+start = time.time()
+sys.path.insert(0, '../')
 
 # third party
 import pandas as pd
@@ -108,3 +113,6 @@ for batch in LEXISNEXIS.batches:
     else:
         df_unique = df.merge(df_unique, how='outer', left_index=True, right_index=True)
 df_unique.to_pickle(PATHS.results / 'df_counts_unique.pkl')
+
+end = time.time()
+print(f"Finished in: {end - start}s")
