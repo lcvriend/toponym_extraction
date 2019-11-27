@@ -149,4 +149,4 @@ nlp.add_pipe(ruler)
 nlp.to_disk(PATHS.model)
 
 end = time.time()
-print(f"Finished in: {end - start}s")
+print(f"Finished in: {round(end - start)}s")

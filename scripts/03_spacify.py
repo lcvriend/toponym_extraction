@@ -115,4 +115,4 @@ for batch in LEXISNEXIS.batches:
 df_unique.to_pickle(PATHS.results / 'df_counts_unique.pkl')
 
 end = time.time()
-print(f"Finished in: {end - start}s")
+print(f"Finished in: {round(end - start)}s")
