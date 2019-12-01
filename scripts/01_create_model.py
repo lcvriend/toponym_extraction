@@ -74,7 +74,6 @@ from src.doc_analysis import get_positives
 from src.geo_data import (
     load_geonames,
     load_rest_countries,
-    load_cbs_municipalities
 )
 
 
@@ -128,7 +127,7 @@ for key in topography:
     patterns = list()
     try:
         annotation = PATHS.results / f"df_annotations_{key}.pkl"
-        positives = get_positives(pd.read_pickle(annotation))
+        positives = get_positives(pd.read_pickle(annotation), threshold=50)
     except FileNotFoundError:
         continue
 
