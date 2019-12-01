@@ -15,7 +15,7 @@ from src.utils import download_from_url
 
 
 # GeoNames
-def load_geonames(language=PROJECT.language):
+def load_geonames(language=PROJECT.language, alts_json=None):
     """
     Load data from the geonames dataset and return as `DataFrame`.
     Keep only places with the largest pop if duplicated names occur.
@@ -110,6 +110,15 @@ def load_geonames(language=PROJECT.language):
             keep='first'
             )
 
+    if alts_json:
+        with open(alts_json, 'r', encoding='utf8') as f:
+            alts = json.load(f)
+
+        for key, val in alts.items():
+            for item in val:
+                row = df.query("alternate_name == @key").copy()
+                row.alternate_name = item
+                df = df.append(row, ignore_index=True)
     return df
 
 
