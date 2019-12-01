@@ -180,7 +180,7 @@ def most_common(data, attribute, n=10):
     return df
 
 
-def get_positives(df):
+def get_positives(df, threshold=100):
     """
     Return a list of phrases that have at least one positive annotation.
     Input is a df_annotations `DataFrame` created by the annotator.
@@ -190,15 +190,28 @@ def get_positives(df):
     :param df: `DataFrame`
         df_annotations `DataFrame` created by the annotator.
 
+    Optional key-word arguments
+    ===========================
+    :param threshold: `int`, default=100
+        Threshold determining if a phrase is considered postive.
+        If the percentage of positive annotations of a phrase is higher than
+        or equal to the threshold, then the phrase is marked positive.
+
     Returns
     =======
     :get_positives: `list`
     """
 
-    df = df.copy()
-    df['positive'] = df.annotation == '+'
-    df_positives = df.groupby('phrase')['positive'].any()
-    return list(df_positives[df_positives].index)
+    df = df.pivot_table(
+        index='phrase',
+        columns='annotation',
+        values='id',
+        aggfunc='count',
+        fill_value=0
+    )
+    df['%'] = (df['+'] / (df.sum(axis=1)) * 100).round(1)
+    df['positive'] = df['%'] >= threshold
+    return list(df[df['positive']].index)
 
 
 def load_lexisnexis_data():
