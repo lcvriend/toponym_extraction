@@ -31,6 +31,7 @@ from src.doc_analysis import basic_stats, attribute_counter, most_common
 
 
 ### Serialize LexisNexis documents
+print("Serialize batches")
 nlp = load_model(PATHS.model)
 
 for batch in LEXISNEXIS.batches:
@@ -38,6 +39,7 @@ for batch in LEXISNEXIS.batches:
 
 
 ### Store some general stats
+print("Store stats")
 df_stats = pd.DataFrame()
 for batch in LEXISNEXIS.batches:
     pre_df = list()
@@ -54,6 +56,7 @@ df_stats.to_pickle(PATHS.results / 'df_nlp_stats.pkl')
 
 
 ### Store entity and token counts
+print("Store counts")
 all_fails = list()
 batches_totals = dict()
 batches_unique = dict()
@@ -94,6 +97,7 @@ with open(PATHS.results / 'unrecognized_tokens.json', 'w') as f:
 
 
 ### Store as dataframes
+print("Store as dataframes")
 df_totals = pd.DataFrame()
 for batch in LEXISNEXIS.batches:
     df = pd.DataFrame.from_dict(batches_totals[batch], orient='index')
