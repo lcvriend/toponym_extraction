@@ -50,15 +50,16 @@ class DocEvaluator(Annotator):
             display(HTML(html))
 
             while True:
-                idx = input('idx: ')
+                idx = input('idx and [+] false positve, [-] false negative: ')
                 if idx and idx != '.':
                     try:
-                        int(idx)
-                        annotation = None
-                        while annotation not in ['+', '-']:
-                            annotation = input(
-                                '[+] false positve, [-] false negative: '
-                                )
+                        annotation = idx[-1:]
+                        int(idx[:-1])
+                        # annotation = None
+                        # while annotation not in ['+', '-']:
+                        #     annotation = input(
+                        #         '[+] false positve, [-] false negative: '
+                        #         )
                         self.annotations.append(
                             self.Annotation(id, idx, annotation, datetime.now())
                             )
