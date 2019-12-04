@@ -192,7 +192,13 @@ def load_rest_countries(language=PROJECT.language, alts_json=None):
                 countries[alt] = countries[key]
 
     with open(path, 'w', encoding='utf8') as f:
-        json.dump(rest, f, indent=4, sort_keys=True)
+        rest = json.dumps(
+            countries,
+            indent=4,
+            sort_keys=True,
+            ensure_ascii=False
+        )
+        f.write(rest)
 
     return countries
 
