@@ -169,12 +169,15 @@ def most_common(data, attribute, n=10):
     else:
         for source in data:
             cols = pd.MultiIndex.from_product([[source], ['label', 'count']])
-            n_most_common = data[source][attribute].most_common(n)
-            df_ = pd.DataFrame(n_most_common, columns=cols)
-            if df.empty:
-                df = df_
-            else:
-                df = df.join(df_)
+            try:
+                n_most_common = data[source][attribute].most_common(n)
+                df_ = pd.DataFrame(n_most_common, columns=cols)
+                if df.empty:
+                    df = df_
+                else:
+                    df = df.join(df_)
+            except KeyError:
+                continue
 
     df.index.name = 'ranking'
     return df
