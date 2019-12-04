@@ -181,7 +181,7 @@ def xml_to_text(xml, uri=URI):
             if run.text:
                 text += run.text
         text = text.strip()
-        text = normalize('NFKD', text)
+        # text = normalize('NFKD', text)
         if text:
             document.append(text)
             text = u''
