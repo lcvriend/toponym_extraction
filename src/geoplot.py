@@ -1,9 +1,6 @@
 # third party
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
-# rc('text', usetex=True)
-# pgf.rcfonts : False
-
 rcParams.update({
     "font.family": "serif",  # use serif/main font for text elements
     "text.usetex": True,     # use inline math for ticks
