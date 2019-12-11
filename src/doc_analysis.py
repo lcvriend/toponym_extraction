@@ -183,6 +183,20 @@ def most_common(data, attribute, n=10):
     return df
 
 
+def overlapping_items(data, attribute, n=12):
+    counts = Counter()
+    keys = data.keys()
+    labels = most_common(
+        data,
+        attribute,
+        n=n
+    ).xs('label', level=1, axis=1)
+    for key in keys:
+        for item in labels[key]:
+            counts[item] += 1
+    return counts.most_common()
+
+
 def get_positives(df, threshold=100):
     """
     Return a list of phrases that have at least one positive annotation.
