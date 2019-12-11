@@ -1,5 +1,14 @@
 # third party
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
+# rc('text', usetex=True)
+# pgf.rcfonts : False
+
+rcParams.update({
+    "font.family": "serif",  # use serif/main font for text elements
+    "text.usetex": True,     # use inline math for ticks
+    "pgf.rcfonts": False,    # don't setup fonts from rc parameters
+})
 from adjustText import adjust_text
 
 # local
@@ -54,7 +63,7 @@ def annotate_geoplot(ax, gdf, text):
             row[text],
             ha='center',
             va='center',
-            fontsize=14,
+            fontsize=10,
             ) for _, row in gdf.iterrows()
         ]
     return adjust_text(texts, ax=ax)
