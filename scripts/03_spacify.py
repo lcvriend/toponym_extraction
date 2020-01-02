@@ -25,7 +25,7 @@ import pandas as pd
 from spacy.util import load_model
 
 # local
-from src.config_ import PATHS, LEXISNEXIS
+from src.config_ import PATHS, FILENAMES, LEXISNEXIS
 from src.spacy_helpers import serialize_batch, fetch_docs
 from src.doc_analysis import basic_stats, attribute_counter, most_common
 
@@ -52,7 +52,7 @@ for batch in LEXISNEXIS.batches:
     df_doc.columns = [col.lower() for col in df_doc.columns]
 
     df_stats = df_stats.append(df_doc, sort=False)
-df_stats.to_pickle(PATHS.results / 'df_nlp_stats.pkl')
+df_stats.to_pickle(PATHS.results / f"{FILENAMES.nlp_statistics}.pkl")
 
 
 ### Store entity and token counts
@@ -82,8 +82,8 @@ for batch in LEXISNEXIS.batches:
     batches_unique[batch] = batch_unique
 
 d = {
-    'dct_total_tokens_and_entities': batches_totals,
-    'dct_unique_tokens_and_entities': batches_unique,
+    FILENAMES.places_counts_total: batches_totals,
+    FILENAMES.places_counts_unique: batches_unique,
 }
 for key in d:
     with open(PATHS.results / f"{key}.pkl", 'wb') as f:
