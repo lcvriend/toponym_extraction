@@ -1,11 +1,13 @@
 # standard library
+import json
+import pickle
 from collections import Counter
 
 # third party
 import pandas as pd
 
 # local
-from src.config_ import PATHS
+from src.config_ import PATHS, FILENAMES, LEXISNEXIS
 
 
 def basic_stats(doc):
@@ -231,6 +233,47 @@ def get_positives(df, threshold=100):
     return list(df[df['positive']].index)
 
 
+def load_counts(merge_entries=True, stopwords=None):
+    """
+    Return a dictionary of dictionaries with total and unique places counts.
+    If merge_entries is True synonymous entries are merged in to the main entry.
+    If a list of stopwords is given, these will be removed from 'lemma'.
+    """
+
+    d = dict()
+
+    files = {
+        'total':  FILENAMES.places_counts_total,
+        'unique': FILENAMES.places_counts_unique,
+    }
+    for key, file in files.items():
+        with open(PATHS.results / f"{file}.pkl", 'rb') as f:
+            d[key] = pickle.load(f)
+
+    # merge synonymoous entries into their main entry
+    if merge_entries:
+        alts_file = PATHS.parameters / 'alts_countries.json'
+        with open(alts_file, 'r', encoding='utf8') as f:
+            alts_countries = json.load(f)
+
+        for count_type in d:
+            for batch in LEXISNEXIS.batches:
+                for country in alts_countries:
+                    for alt in alts_countries[country]:
+                        n = d[count_type][batch]['countries'][alt]
+                        del d[count_type][batch]['countries'][alt]
+                        d[count_type][batch]['countries'][country] += n
+
+    # remove any given stopwords
+    if stopwords is not None:
+        for count_type in d:
+            for batch in LEXISNEXIS.batches:
+                for stopword in stopwords:
+                    del d[count_type][batch]['lemma'][stopword]
+
+    return d
+
+
 def load_lexisnexis_data():
     """
     Load all lexisnexis data into a single `DataFrame`.
@@ -241,9 +284,7 @@ def load_lexisnexis_data():
     :load_lexisnexis_data: `DataFrame`
     """
 
-    df = pd.DataFrame()
-    for pkl in PATHS.data_int.glob('*.pkl'):
-        if pkl.name.startswith('_'):
-            continue
-        df = df.append(pd.read_pickle(pkl), sort=False)
+    files = PATHS.data_int.glob('[!_]*.pkl')
+    dfs = [pd.read_pickle(f) for f in files]
+    df = pd.concat(dfs)
     return df.set_index('id')
