@@ -105,6 +105,7 @@ MODEL      = get_section(config, 'MODEL')
 LEXISNEXIS = get_section(config, 'LEXISNEXIS')
 GEONAMES   = get_section(config, 'GEONAMES')
 MAPPING    = get_section(config, 'MAPPING')
+FILENAMES  = get_section(config, 'FILENAMES')
 PATHS      = get_section(
     config,
     'PATHS',
