@@ -10,12 +10,16 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 # local
-from src.config_ import PATHS, PROJECT
+from src.config_ import PATHS, FILENAMES, PROJECT
 from src.utils import download_from_url
 
 
 # GeoNames
-def load_geonames(language=PROJECT.language, alts_json=None):
+def load_geonames(
+    language=PROJECT.language,
+    alts_json=PATHS.parameters / FILENAMES.alt_placenames,
+    translations=PATHS.parameters / FILENAMES.translations,
+):
     """
     Load data from the geonames dataset and return as `DataFrame`.
     Keep only places with the largest pop if duplicated names occur.
@@ -36,6 +40,12 @@ def load_geonames(language=PROJECT.language, alts_json=None):
     :load_geonames: `DataFrame`
     """
 
+    path = PATHS.resources / 'geonames/geonames_{language}.pkl'
+
+    if path.exists():
+        return pd.read_pickle(path)
+
+    # BUILD GEONAMES
     path_geonames = PATHS.resources / 'geonames'
     dfs = {i.stem[3:]:pd.read_pickle(i) for i in path_geonames.glob('*.pkl')}
 
@@ -97,7 +107,7 @@ def load_geonames(language=PROJECT.language, alts_json=None):
         'country_code', 'country',
         'admin_code1', 'admin_name1', 'admin_code2', 'admin_name2',
         'population',
-        ]
+    ]
     df = df[cols]
     df['alt'] = df.alternate_name.notna()
     df['alternate_name'] = df.alternate_name.fillna(df.name)
@@ -110,8 +120,8 @@ def load_geonames(language=PROJECT.language, alts_json=None):
             keep='first'
             )
 
-    if alts_json:
-        with open(alts_json, 'r', encoding='utf8') as f:
+    if alts_json and alts_json.exists():
+        with open(alts_json.with_suffix('.json'), 'r', encoding='utf8') as f:
             alts = json.load(f)
 
         for key, val in alts.items():
@@ -119,11 +129,28 @@ def load_geonames(language=PROJECT.language, alts_json=None):
                 row = df.query("alternate_name == @key").copy()
                 row.alternate_name = item
                 df = df.append(row, ignore_index=True)
+
+    rest = load_rest_countries()
+    region = {rest[c]['alpha2Code']:rest[c]['region'] for c in rest}
+    subregion = {rest[c]['alpha2Code']:rest[c]['subregion'] for c in rest}
+    df['region'] = df.country_code.apply(region.get)
+    df['subregion'] = df.country_code.apply(subregion.get)
+
+    if translations and translations.exists():
+        with open(translations.with_suffix('.json'), 'r', encoding='utf8') as f:
+            d = json.load(f)
+        df = df.replace(d['region']
+                ).replace(d['subregion'])
+
+    df.to_pickle(path)
     return df
 
 
 # REST_countries
-def load_rest_countries(language=PROJECT.language, alts_json=None):
+def load_rest_countries(
+    language=PROJECT.language,
+    alts_json=PATHS.parameters / FILENAMES.alt_country_names,
+):
     """
     Load countries from 'https://restcountries.eu' and return data as dict.
     The function will first check PATHS.resources / 'rest_countries' for json.
@@ -174,17 +201,15 @@ def load_rest_countries(language=PROJECT.language, alts_json=None):
     data = r.json()
 
     if language == 'en' or language == 'us':
-        countries = {
-            i['name']: i for i in data
-            }
+        countries = {i['name']: i for i in data}
     else:
         countries = {
             i['translations'][language]: i
             for i in data if i['translations'][language] is not None
-            }
+        }
 
-    if alts_json:
-        with open(alts_json, 'r', encoding='utf8') as f:
+    if alts_json and alts_json.exists():
+        with open(alts_json.with_suffix('.json'), 'r', encoding='utf8') as f:
             alts = json.load(f)
 
         for key in alts:
