@@ -1,0 +1,21 @@
+{
+    "region": {
+        "Europe":             "Europa",
+        "Americas":           "Amerika",
+        "Asia":               "Azië",
+        "Africa":             "Afrika",
+        "Oceania":            "Oceanië"
+    },
+    "subregion": {
+        "Northern Europe":    "Noord-Europa",
+        "Eastern Europe":     "Oost-Europa",
+        "Southern Europe":    "Zuid-Europa",
+        "Western Europe":     "West-Europa",
+        "Northern America":   "Noord-Amerika",
+        "Western Asia":       "West-Azië",
+        "Southern Asia":      "Zuid-Azië",
+        "South-Eastern Asia": "Zuid-Oost Azië",
+        "Eastern Asia":       "Oost-Azië",
+        "Northern Africa":    "Noord-Afrika"
+    }
+}
