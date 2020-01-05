@@ -243,11 +243,11 @@ def load_counts(merge_entries=True, stopwords=None):
     d = dict()
 
     files = {
-        'total':  FILENAMES.places_counts_total,
-        'unique': FILENAMES.places_counts_unique,
+        'total':  FILENAMES.dct_counts_total,
+        'unique': FILENAMES.dct_counts_unique,
     }
     for key, file in files.items():
-        with open(PATHS.results / f"{file}.pkl", 'rb') as f:
+        with open(PATHS.results / file, 'rb') as f:
             d[key] = pickle.load(f)
 
     # merge synonymoous entries into their main entry
@@ -274,7 +274,7 @@ def load_counts(merge_entries=True, stopwords=None):
     return d
 
 
-def load_lexisnexis_data():
+def load_lexisnexis_data(add_stats=True):
     """
     Load all lexisnexis data into a single `DataFrame`.
     Skips any files starting with '_'.
@@ -287,4 +287,8 @@ def load_lexisnexis_data():
     files = PATHS.data_int.glob('[!_]*.pkl')
     dfs = [pd.read_pickle(f) for f in files]
     df = pd.concat(dfs)
-    return df.set_index('id')
+    df = df.set_index('id')
+    if add_stats:
+        stats_file = PATHS.results / FILENAMES.nlp_statistics
+        df = df.join(pd.read_pickle(stats_file).set_index('id'))
+    return df
