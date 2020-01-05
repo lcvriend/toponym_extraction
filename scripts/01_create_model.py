@@ -79,9 +79,8 @@ from src.geo_data import (
 
 ### Prepare geo entities
 # load datasets
-alts_path = PATHS.parameters / 'alts_countries.json'
 print('loading RESTcountries')
-countries = load_rest_countries(language='nl', alts_json=alts_path)
+countries = load_rest_countries()
 print('loading geonames')
 geonames = load_geonames()
 
@@ -126,7 +125,7 @@ with open(path, 'w', encoding='utf8') as f:
 for key in topography:
     patterns = list()
     try:
-        annotation = PATHS.results / f"df_annotations_{key}.pkl"
+        annotation = PATHS.annotations / f"df_annotations_{key}.pkl"
         positives = get_positives(pd.read_pickle(annotation), threshold=50)
     except FileNotFoundError:
         continue

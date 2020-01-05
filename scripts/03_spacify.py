@@ -11,6 +11,8 @@ It may happen that certain lemmas/entities fail to be counted. These will be
 stored in PATHS.results as well.
 """
 
+print('spacify lexisnexis articles')
+
 # standard library
 import json
 import pickle
@@ -31,32 +33,30 @@ from src.doc_analysis import basic_stats, attribute_counter, most_common
 
 
 ### Serialize LexisNexis documents
-print("serialize batches")
+print("[1] serialize batches")
 nlp = load_model(PATHS.model)
-
 for batch in LEXISNEXIS.batches:
     serialize_batch(nlp, batch)
 
 
 ### Store some general stats
-print("store stats")
-df_stats = pd.DataFrame()
-for batch in LEXISNEXIS.batches:
-    pre_df = list()
-
+print("[2] store stats")
+def get_stats(batch):
+    data = list()
     for doc in fetch_docs(PATHS.data_prc / batch, nlp.vocab):
         stats = basic_stats(doc)
-        pre_df.append(stats)
+        data.append(stats)
+    df = pd.DataFrame(data)
+    df.columns = [col.lower() for col in df.columns]
+    return df
 
-    df_doc = pd.DataFrame(pre_df)
-    df_doc.columns = [col.lower() for col in df_doc.columns]
-
-    df_stats = df_stats.append(df_doc, sort=False)
-df_stats.to_pickle(PATHS.results / f"{FILENAMES.nlp_statistics}.pkl")
+pd.concat(
+    [get_stats(batch) for batch in LEXISNEXIS.batches], sort=False,
+).to_pickle(PATHS.results / FILENAMES.nlp_statistics)
 
 
 ### Store entity and token counts
-print("store counts")
+print("[3] store counts")
 all_fails = list()
 batches_totals = dict()
 batches_unique = dict()
@@ -82,41 +82,40 @@ for batch in LEXISNEXIS.batches:
     batches_unique[batch] = batch_unique
 
 d = {
-    FILENAMES.places_counts_total: batches_totals,
-    FILENAMES.places_counts_unique: batches_unique,
+    FILENAMES.dct_counts_total:  batches_totals,
+    FILENAMES.dct_counts_unique: batches_unique,
 }
 for key in d:
-    with open(PATHS.results / f"{key}.pkl", 'wb') as f:
+    with open(PATHS.results / key, 'wb') as f:
         pickle.dump(d[key], f)
 
 flatten_fails = [fail for fails in all_fails for fail in fails]
-print(f"Encountered {len(flatten_fails)} failed items.")
+print(f"---encountered {len(flatten_fails)} failed items.")
 
 with open(PATHS.results / 'unrecognized_tokens.json', 'w') as f:
     json.dump(all_fails, f, indent=4)
 
 
 ### Store as dataframes
-print("store as dataframes")
-df_totals = pd.DataFrame()
-for batch in LEXISNEXIS.batches:
-    df = pd.DataFrame.from_dict(batches_totals[batch], orient='index')
-    df = df.stack().to_frame().rename(columns={0: batch})
-    if df_totals.empty:
-        df_totals = df
-    else:
-        df_totals = df.merge(df_totals, how='outer', left_index=True, right_index=True)
-df_totals.to_pickle(PATHS.results / 'df_counts_totals.pkl')
+print("[4] store as dataframes")
+def dict_to_df(dct, batch):
+    return (
+        pd.DataFrame
+            .from_dict(batches_totals[batch], orient='index')
+            .stack()
+            .to_frame()
+            .rename(columns={0: batch})
+    )
 
-df_unique = pd.DataFrame()
-for batch in LEXISNEXIS.batches:
-    df = pd.DataFrame.from_dict(batches_unique[batch], orient='index')
-    df = df.stack().to_frame().rename(columns={0: batch})
-    if df_unique.empty:
-        df_unique = df
-    else:
-        df_unique = df.merge(df_unique, how='outer', left_index=True, right_index=True)
-df_unique.to_pickle(PATHS.results / 'df_counts_unique.pkl')
+d = {
+    FILENAMES.df_counts_total:  batches_totals,
+    FILENAMES.df_counts_unique: batches_unique,
+}
+for filename, dct in d.items():
+    df = pd.concat([dict_to_df(dct[b], b) for b in LEXISNEXIS.batches], axis=1)
+    df.to_pickle(PATHS.results / filename)
+
+print(df.count())
 
 end = time.time()
-print(f"Finished in: {round(end - start)}s")
+print(f"finished in: {round(end - start)}s")

@@ -28,6 +28,7 @@ some additional processing:
 Finally, the processed dataset is stored in PATHS.data_int. The raw data, the duplicate paragraphs and the records that were removed through the queries are also stored in separate files starting with an underscore.
 """
 
+print('extract lexisnexis articles from word documents')
 
 # standard libray
 import sys
@@ -43,7 +44,7 @@ locale.setlocale(locale.LC_ALL, 'nl_NL.utf8')
 import pandas as pd
 
 # local
-from src.config_ import LEXISNEXIS, PATHS
+from src.config_ import LEXISNEXIS, PATHS, FILENAMES
 from src.lexisnexis_parser import (
     docxs_to_df,
     split_page_from_section,
@@ -51,12 +52,20 @@ from src.lexisnexis_parser import (
     standardize_df,
 )
 
+line = 80 * '-'
+overview = list()
+for batch, name in zip(LEXISNEXIS.batches, LEXISNEXIS.batch_names):
+    print(line, flush=True)
+    results = dict()
 
-for batch in LEXISNEXIS.batches:
     # save original parsed data
     path_raw = PATHS.data_raw / batch
     df = docxs_to_df(path_raw)
     df.to_pickle(PATHS.data_int / f'_{batch}_raw.pkl')
+    results['initial'] = len(df)
+
+    # set source to configured batch name
+    df['source'] = name
 
     # separate section and page
     df = split_page_from_section(df)
@@ -75,6 +84,7 @@ for batch in LEXISNEXIS.batches:
     # drop duplicate rows
     subset = ['title', 'publication_date', 'section']
     df = df.drop_duplicates(subset=subset, keep='first')
+    results['deduped'] = len(df)
 
     # count occurrence of paragraphs
     paragraphs = Counter()
@@ -104,5 +114,14 @@ for batch in LEXISNEXIS.batches:
     df_out.to_pickle(PATHS.data_int / f'{batch}.pkl')
     df_removed.to_pickle(PATHS.data_int / f'_{batch}_removed.pkl')
 
+    results['filtered'] = len(df_out)
+    results['duped_paragraphs'] = len(df_dupes)
+    s = pd.Series(results, name=name)
+    print(s, flush=True)
+    overview.append(s)
+
+print(line, flush=True)
+pd.concat(overview, axis=1).to_pickle(PATHS.results / FILENAMES.textraction)
+
 end = time.time()
-print(f"Finished in: {round(end - start)}s")
+print(f"finished in: {round(end - start)}s")
