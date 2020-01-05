@@ -19,34 +19,41 @@ def geoplot_points(
     points,
     title=None,
     factor=1,
+    frameon=True,
+    legend_loc='upper left'
     ):
     """
     Plot points on a basemap.
     """
 
-    basemap.plot(ax=ax, color='lightyellow', edgecolor='lightgray')
+    basemap.plot(
+        ax=ax,
+        color=(31/256, 119/256, 180/256, 0.1),
+        edgecolor='lightgray',
+        linewidth=0.5,
+    )
     scatter = gdf.plot(
         ax=ax,
         marker='o',
         color='red',
         alpha=0.5,
         markersize=points * factor
-        )
+    )
     kw = dict(
         prop="sizes",
         num=[1,10,50,200],
         color='red',
         alpha=0.5,
         func=lambda s: s/factor,
-        )
+    )
     legend = ax.legend(
         *scatter.collections[1].legend_elements(**kw),
-        loc="upper left",
-        borderpad=2.0,
-        labelspacing=4.5,
-        handletextpad=2.0,
-        frameon=False,
-        )
+        loc=legend_loc,
+        borderpad=1.8,
+        labelspacing=2.5,
+        handletextpad=1.8,
+        frameon=frameon,
+    )
     if title:
         ax.set_title(title, fontdict={'fontsize':24})
     return ax
