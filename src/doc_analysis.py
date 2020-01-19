@@ -109,7 +109,7 @@ def attribute_counter(doc, unique=False):
             not token.text == '\n'
             )
         try:
-            if unique and token.lemma_ in counters['lemma'].keys():
+            if unique and token.lemma_ in counters['lemma']:
                 continue
             if relevant_token:
                 counters['lemma'][token.lemma_] += 1
@@ -118,14 +118,14 @@ def attribute_counter(doc, unique=False):
     for ent in doc.ents:
         if ent.label_ not in counters:
             counters[ent.label_] = Counter()
-        if unique and ent.text in counters[ent.label_].keys():
+        if unique and ent.text in counters[ent.label_]:
             continue
         counters[ent.label_][ent.text] += 1
 
     return counters, fails
 
 
-def most_common(data, attribute, n=10):
+def most_common(data, attribute, n=10, label_col='label', frq_col='count'):
     """
     Return the n most common attributes per source as DataFrame.
 
@@ -141,46 +141,42 @@ def most_common(data, attribute, n=10):
     ===========================
     :param n: `int`, default=10
         Number of attributes to return.
+    :param label_col: `str`, default='label'
+        Name for the label column.
+    :param frq_col: `str`, default='count'
+        Name for the frequency column.
 
     Returns
     =======
     :most_common: `DataFrame`
     """
 
-    df = pd.DataFrame()
-
     if isinstance(data, pd.DataFrame):
-        sources = data.source.unique()
-        for source in sources:
-            qry = f'source == @source'
-            cols = pd.MultiIndex.from_product([[source], [attribute, 'count']])
-            n_most_common = (
+        def transform(data, source, attribute, n=n):
+            cols = pd.MultiIndex.from_product([[source], [label_col, frq_col]])
+            qry = f"source == @source"
+            df = (
                 data.query(qry)[attribute]
                     .value_counts()
                     .to_frame()
                     .reset_index()
                     .head(n)
                 )
-            if df.empty:
-                df = n_most_common
-                df.columns = cols
-            else:
-                n_most_common.columns = cols
-                df = df.join(n_most_common)
+            return pd.DataFrame(df, columns=cols)
+        sources = data.source.unique()
 
     else:
-        for source in data:
-            cols = pd.MultiIndex.from_product([[source], ['label', 'count']])
+        def transform(data, source, attribute, n=n):
+            cols = pd.MultiIndex.from_product([[source], [label_col, frq_col]])
             try:
                 n_most_common = data[source][attribute].most_common(n)
-                df_ = pd.DataFrame(n_most_common, columns=cols)
-                if df.empty:
-                    df = df_
-                else:
-                    df = df.join(df_)
+                return pd.DataFrame(n_most_common, columns=cols)
             except KeyError:
-                continue
+                return pd.DataFrame()
+        sources = data.keys()
 
+    dfs = [transform(data, source, attribute) for source in sources]
+    df = pd.concat(dfs, axis=1)
     df.index.name = 'ranking'
     return df
 
