@@ -161,7 +161,7 @@ def most_common(data, attribute, n=10, label_col='label', frq_col='count'):
                     .to_frame()
                     .reset_index()
                     .head(n)
-                )
+                ).values
             return pd.DataFrame(df, columns=cols)
         sources = data.source.unique()
 
