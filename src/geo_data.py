@@ -40,7 +40,7 @@ def load_geonames(
     :load_geonames: `DataFrame`
     """
 
-    path = PATHS.resources / 'geonames/geonames_{language}.pkl'
+    path = PATHS.resources / f'geonames/geonames_{language}.pkl'
 
     if path.exists():
         return pd.read_pickle(path)
@@ -133,6 +133,7 @@ def load_geonames(
     rest = load_rest_countries()
     region = {rest[c]['alpha2Code']:rest[c]['region'] for c in rest}
     subregion = {rest[c]['alpha2Code']:rest[c]['subregion'] for c in rest}
+    df.loc[df.country == 'Namibia', 'country_code'] = 'NA'
     df['region'] = df.country_code.apply(region.get)
     df['subregion'] = df.country_code.apply(subregion.get)
 
