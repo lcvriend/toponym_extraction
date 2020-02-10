@@ -15,7 +15,18 @@ def geoplot_points(
     gdf,
     points,
     title=None,
+    title_fontsize=24,
     factor=1,
+    axis_labelsize=8,
+    basemap_color=(31/256, 119/256, 180/256, 0.1),
+    basemap_edgecolor='lightgray',
+    point_marker='o',
+    point_color='red',
+    point_alpha=0.5,
+    legend_points=[1,10,50,200],
+    legend_borderpad=1.8,
+    legend_labelspacing=2.5,
+    legend_handletextpad=1.8,
     frameon=True,
     legend_loc='upper left'
     ):
@@ -25,39 +36,41 @@ def geoplot_points(
 
     basemap.plot(
         ax=ax,
-        color=(31/256, 119/256, 180/256, 0.1),
-        edgecolor='lightgray',
+        color=basemap_color,
+        edgecolor=basemap_edgecolor,
         linewidth=0.5,
     )
-    ax.tick_params(labelsize=8)
+    ax.tick_params(labelsize=axis_labelsize)
     scatter = gdf.plot(
         ax=ax,
-        marker='o',
-        color='red',
-        alpha=0.5,
+        marker=point_marker,
+        color=point_color,
+        alpha=point_alpha,
         markersize=points * factor
     )
     kw = dict(
         prop="sizes",
-        num=[1,10,50,200],
-        color='red',
-        alpha=0.5,
+        num=legend_points,
+        color=point_color,
+        alpha=point_alpha,
         func=lambda s: s/factor,
     )
-    legend = ax.legend(
+    ax.legend(
         *scatter.collections[1].legend_elements(**kw),
         loc=legend_loc,
-        borderpad=1.8,
-        labelspacing=2.5,
-        handletextpad=1.8,
+        borderpad=legend_borderpad,
+        labelspacing=legend_labelspacing,
+        handletextpad=legend_handletextpad,
         frameon=frameon,
     )
     if title:
-        ax.set_title(title, fontdict={'fontsize':24})
+        ax.set_title(title, fontdict={'fontsize':title_fontsize})
     return ax
 
 
 def annotate_geoplot(ax, gdf, text):
+    "Annotate names on plot."
+
     texts = [
         ax.text(
             row['geometry'].x,
