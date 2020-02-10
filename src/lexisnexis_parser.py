@@ -35,15 +35,15 @@ def docxs_to_df(path):
 
     n_articles = len(list(path.glob('*.docx')))
     articles = path.glob('*.docx')
-    pre_df = list()
+    data = []
     for a in tqdm(articles, total=n_articles):
         try:
             row = docx_to_dict(a)
-            pre_df.append(row)
+            data.append(row)
         except zipfile.BadZipFile:
             print('Bad docx (did not parse): ', a)
 
-    df = pd.DataFrame(pre_df)
+    df = pd.DataFrame(data)
     df.columns = [format_colname(column) for column in df.columns]
 
     return df
@@ -86,11 +86,11 @@ def docx_to_dict(filename):
         with docx.open('word/_rels/document.xml.rels') as xml:
             xml_rel = xml.read()
 
-    doc = dict()
+    doc = {}
     doc['folder'] = str(filename.parent)
     doc['filename'] = filename.name
     doc['url'] = get_url(xml_rel)
-    doc['body'] = list()
+    doc['body'] = []
 
     in_body = False
     document = xml_to_text(xml_doc)
@@ -194,7 +194,7 @@ def standardize_df(
     cols=None,
     extend=None,
     sort_on=['publication_date', 'page']
-    ):
+):
     """
     Standardize the format of the `DataFrame` containing the LexisNexis data:
     - Keep only the specified columns in the specified order.
@@ -262,30 +262,30 @@ def standardize_df(
     # prepare output df with expected columns
     # even if columns are missing in the input df
     # they will be in the output df
-    df_out = pd.DataFrame(columns=cols, index=df.index)
-    date_cols = [col for col in df_out.columns if 'date' in col]
+    output = pd.DataFrame(columns=cols, index=df.index)
+    date_cols = [col for col in output.columns if 'date' in col]
     if date_cols:
-        df_out[date_cols] = df_out[date_cols].astype('datetime64[ns]')
+        output[date_cols] = output[date_cols].astype('datetime64[ns]')
 
     # add id
     df['id'] = df.apply(
         lambda row: f"{codify_batch(batch)}_{row.name:04d}", axis=1
     )
 
-    df_out.update(df)
+    output.update(df)
 
     # set columns to their original dtypes
     dtypes = df.dtypes.to_dict()
-    df_out = df_out.astype(
-        {col:dtypes[col] for col in dtypes if col in df_out.columns}
+    output = output.astype(
+        {col:dtypes[col] for col in dtypes if col in output.columns}
     )
-    return df_out
+    return output
 
 
 def parse_datestring(
     s,
     format=None,
-    split_on=None,
+    split_on=';',
     nsplits=1,
     ):
     """
@@ -293,7 +293,7 @@ def parse_datestring(
 
     The publication date in LexisNexis documents sometimes has a redundant tail.
     Use 'split_on' to split the string from the right to remove it.
-    If necessary set 'nsplits' to the number of splits necessary.
+    If more splits are needed, set 'nsplits' to the number of splits necessary.
 
     Arguments
     =========
@@ -303,10 +303,11 @@ def parse_datestring(
     ===========================
     :param format: `str`, default None
         strftime to parse time, eg '%d/%m/%Y'.
-    :param split_on: `str`, default None
-        String to split on. If None do not split.
+    :param split_on: `str`, default ';'
+        String to split on.
     :param nsplits: `int`, default 1
         Number of splits to make from right to left.
+        Only the left most split will be processed.
 
     Returns
     =======
@@ -327,7 +328,7 @@ def split_page_from_section(df, split_on=';'):
         'SECTION; [SUB-SECTION;] PAGE NO'
 
     Splits string once from the right.
-    String to split on can be modified via 'spit_on'.
+    String to split on can be modified via the `split_on` parameter.
 
     Parameters
     ==========
@@ -335,8 +336,8 @@ def split_page_from_section(df, split_on=';'):
 
     Optional key-word arguments
     ===========================
-    :param split_on: `str`, default None
-        String to split on. If None do not split.
+    :param split_on: `str`, default ';'
+        String to split on.
 
     Returns
     =======
@@ -354,10 +355,12 @@ def split_page_from_section(df, split_on=';'):
 
 
 def format_colname(colname):
-    colname = colname.lower()
-    colname = colname.replace('-', '_')
-    colname = colname.replace(' ', '_')
-    return colname
+    return (
+        colname
+        .lower()
+        .replace('-', '_')
+        .replace(' ', '_')
+    )
 
 
 def codify_batch(batch):
