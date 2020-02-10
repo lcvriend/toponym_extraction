@@ -10,7 +10,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 # local
-from src.config_ import PATHS, FILENAMES, PROJECT
+from src.config import PATHS, FILENAMES, PROJECT
 from src.utils import download_from_url
 
 

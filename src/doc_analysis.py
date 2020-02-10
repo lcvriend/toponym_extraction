@@ -7,7 +7,7 @@ from collections import Counter
 import pandas as pd
 
 # local
-from src.config_ import PATHS, FILENAMES, LEXISNEXIS
+from src.config import PATHS, FILENAMES, LEXISNEXIS
 
 
 def basic_stats(doc):

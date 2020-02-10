@@ -1,57 +1,113 @@
+"""
+This module loads the settings from config.ini.
+"""
+
+
 # standard library
 import configparser
-from pathlib import Path
 from collections import namedtuple
+from pathlib import Path
 
 
-PATH_HOME      = Path(__file__).resolve().parent.parent
-PATH_MODEL     = PATH_HOME / 'model'
-PATH_DATA      = PATH_HOME / 'data'
-PATH_DATA_R    = PATH_DATA / '00_raw'
-PATH_DATA_I    = PATH_DATA / '01_interim'
-PATH_DATA_P    = PATH_DATA / '02_processed'
-PATH_RESULTS   = PATH_HOME / 'results'
-PATH_RESOURCES = PATH_HOME / 'resources'
-PATH_SHAPES    = PATH_RESOURCES / 'shapefiles'
+PATH_LIB = Path(__file__).resolve().parent.parent
+CFG_FILE  = PATH_LIB / 'config.ini'
+encoding = 'utf-8' # encoding of ini file only
+
+QUOTECHAR = '"'
+SEPARATOR = ','
+BOOLEAN_STATES = {
+    'true': True, 'false': False,
+    't':    True, 'f':     False,
+    '1':    True, '0':     False,
+    'yes':  True, 'no':    False,
+    'on':   True, 'off':   False,
+}
 
 
 def load_ini(filename):
-    # load parameters
     ini = configparser.ConfigParser(interpolation=None)
-    ini.read(filename, encoding='utf-8')
+    ini.read(filename, encoding=encoding)
     return ini
 
 
-def get_list(param):
-    return param.strip('\n').split('\n')
+def config_from_ini(ini):
+    Config = namedtuple('Config', [section for section in ini])
+    sections = list()
+    for section in ini:
+        sections.append(get_section(ini, section))
+    return Config._make(sections)
 
 
-def drop_types(name):
-    strings_to_drop = ['list_', 'int_']
-    for string in strings_to_drop:
-        name = name.replace(string, '')
-    return name
+def ntuple_from_section(ini, section):
+    return namedtuple(section, [item for item in ini[section]])
 
 
-# create easy access to the parameters
-ini = load_ini(PATH_HOME / 'parameters.ini')
-Parameters = namedtuple('Parameters', [s for s in ini])
-
-sections = list()
-for section in ini:
-
-    Section = namedtuple(
-        section, [drop_types(p) for p in ini[section]]
-        )
+def get_section(ini, section, func=None):
+    Section = ntuple_from_section(ini, section)
     values = list()
-    for p in ini[section]:
-        value = ini[section][p]
-        if 'list_' in p:
-            values.append(get_list(value))
-        elif 'int_' in p:
-            values.append(int(value))
-        else:
-            values.append(value)
+    for item in ini[section]:
+        value = parse_value(ini[section][item])
+        if func:
+            value = func(value)
+        values.append(value)
+    return Section._make(values)
 
-    sections.append(Section._make(values))
-PARAM = Parameters._make(sections)
+
+def parse_value(value):
+    value = value.strip('\n ')
+    try: return int(value)
+    except ValueError: pass
+    try: return float(value)
+    except ValueError: pass
+
+    if value[:1] == QUOTECHAR and value[-1:] == QUOTECHAR:
+        return value.strip(QUOTECHAR)
+    if value[:1] == '[' and value[-1:] == ']':
+        return get_list(value[1:-1].strip('\n '))
+    if any(item == value.lower() for item in BOOLEAN_STATES):
+        return BOOLEAN_STATES[value.lower()]
+    return value
+
+
+def chunker(value):
+    def chunk(value, idx):
+        return value[:idx], value[idx+1:].strip('\n ')
+
+    if len(value) == 0:
+        return None, None
+    elif value[0] == QUOTECHAR:
+        idx = value.find(value[0], 1) + 1
+        return chunk(value, idx)
+    else:
+        idx = value.find(SEPARATOR)
+        if idx == -1:
+            return value, None
+        return chunk(value, idx)
+
+
+def get_list(value):
+    lst = []
+    while True:
+        chunk, value = chunker(value)
+        if chunk is not None:
+            lst.append(parse_value(chunk))
+        if value is None:
+            break
+    if len(lst) > 1:
+        return lst
+    return lst
+
+
+# easy access to settings and paths
+config     = load_ini(CFG_FILE)
+PROJECT    = get_section(config, 'PROJECT')
+MODEL      = get_section(config, 'MODEL')
+LEXISNEXIS = get_section(config, 'LEXISNEXIS')
+GEONAMES   = get_section(config, 'GEONAMES')
+MAPPING    = get_section(config, 'MAPPING')
+FILENAMES  = get_section(config, 'FILENAMES')
+PATHS      = get_section(
+    config,
+    'PATHS',
+    func=lambda x: PATH_LIB / x[1:] if x.startswith('/') else Path(x)
+)

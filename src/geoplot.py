@@ -8,9 +8,6 @@ rcParams.update({
 })
 from adjustText import adjust_text
 
-# local
-from src.config import PARAM, PATH_SHAPES, PATH_RESULTS
-
 
 def geoplot_points(
     ax,
@@ -32,6 +29,7 @@ def geoplot_points(
         edgecolor='lightgray',
         linewidth=0.5,
     )
+    ax.tick_params(labelsize=8)
     scatter = gdf.plot(
         ax=ax,
         marker='o',
@@ -67,7 +65,7 @@ def annotate_geoplot(ax, gdf, text):
             row[text],
             ha='center',
             va='center',
-            fontsize=10,
+            fontsize=9,
             ) for _, row in gdf.iterrows()
         ]
     return adjust_text(texts, ax=ax)

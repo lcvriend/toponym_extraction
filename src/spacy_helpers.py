@@ -4,7 +4,7 @@ from tqdm import tqdm
 from spacy.tokens import Doc
 
 # local
-from src.config_ import PATHS
+from src.config import PATHS
 from src.lexisnexis_parser import codify_batch
 
 Doc.set_extension('id', default=None)

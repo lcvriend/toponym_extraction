@@ -7,9 +7,6 @@ from datetime import datetime
 import pandas as pd
 from IPython.display import HTML, display, clear_output
 
-# local
-from src.config import PATH_RESULTS
-
 
 class Annotator():
     def __init__(self):

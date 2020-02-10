@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 
 # local
-from src.config_ import PROJECT
+from src.config import PROJECT
 
 
 def get_dataset(parameters, path_out):

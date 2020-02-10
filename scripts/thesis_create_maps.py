@@ -5,7 +5,7 @@ import zipfile
 import geopandas
 
 # local
-from src.config_ import PATHS
+from src.config import PATHS
 from src.geo_data import load_cbs_municipalities
 
 
