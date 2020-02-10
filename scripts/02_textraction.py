@@ -44,7 +44,7 @@ locale.setlocale(locale.LC_ALL, 'nl_NL.utf8')
 import pandas as pd
 
 # local
-from src.config_ import LEXISNEXIS, PATHS, FILENAMES
+from src.config import LEXISNEXIS, PATHS, FILENAMES
 from src.lexisnexis_parser import (
     docxs_to_df,
     split_page_from_section,

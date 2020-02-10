@@ -69,7 +69,7 @@ import spacy
 from spacy.pipeline import EntityRuler
 
 # internal
-from src.config_ import PATHS, MODEL
+from src.config import PATHS, MODEL
 from src.doc_analysis import get_positives
 from src.geo_data import (
     load_geonames,

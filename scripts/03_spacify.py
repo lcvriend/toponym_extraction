@@ -27,7 +27,7 @@ import pandas as pd
 from spacy.util import load_model
 
 # local
-from src.config_ import PATHS, FILENAMES, LEXISNEXIS
+from src.config import PATHS, FILENAMES, LEXISNEXIS
 from src.spacy_helpers import serialize_batch, fetch_docs
 from src.doc_analysis import basic_stats, attribute_counter, most_common
 

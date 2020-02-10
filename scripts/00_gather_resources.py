@@ -17,7 +17,7 @@ import zipfile
 from pathlib import Path
 
 # local
-from src.config_ import PATHS, GEONAMES, MAPPING
+from src.config import PATHS, GEONAMES, MAPPING
 from src.utils import get_dataset, download_from_url
 
 
