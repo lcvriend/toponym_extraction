@@ -101,7 +101,7 @@ print("[4] store as dataframes")
 def dict_to_df(dct, batch):
     return (
         pd.DataFrame
-            .from_dict(batches_totals[batch], orient='index')
+            .from_dict(dct[batch], orient='index')
             .stack()
             .to_frame()
             .rename(columns={0: batch})
