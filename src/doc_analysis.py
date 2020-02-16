@@ -152,18 +152,35 @@ def most_common(data, attribute, n=10, label_col='label', frq_col='count'):
     """
 
     if isinstance(data, pd.DataFrame):
+        def extract_sources(data):
+            if isinstance(data.index, pd.MultiIndex):
+                return data.columns
+            else:
+                return data.source.unique()
+
+        def extract_data(data, source, attribute, n):
+            if isinstance(data.index, pd.MultiIndex):
+                return (
+                    data.xs(attribute)[source]
+                        .sort_values(ascending=False)
+                        .to_frame()
+                        .reset_index()
+                        .head(n)
+                    ).values
+            else:
+                return (
+                    data.loc[data.source == source, attribute]
+                        .value_counts()
+                        .to_frame()
+                        .reset_index()
+                        .head(n)
+                    ).values
+
         def transform(data, source, attribute, n=n):
             cols = pd.MultiIndex.from_product([[source], [label_col, frq_col]])
-            qry = f"source == @source"
-            df = (
-                data.query(qry)[attribute]
-                    .value_counts()
-                    .to_frame()
-                    .reset_index()
-                    .head(n)
-                ).values
+            df = extract_data(data, source, attribute, n)
             return pd.DataFrame(df, columns=cols)
-        sources = data.source.unique()
+        sources = extract_sources(data)
 
     else:
         def transform(data, source, attribute, n=n):
