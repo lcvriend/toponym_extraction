@@ -57,12 +57,12 @@ pd.concat(
 
 ### Store entity and token counts
 print("[3] store counts")
-all_fails = list()
-batches_totals = dict()
-batches_unique = dict()
+all_fails = []
+batches_totals = {}
+batches_unique = {}
 for batch in LEXISNEXIS.batches:
-    batch_totals = dict()
-    batch_unique = dict()
+    batch_totals = {}
+    batch_unique = {}
     for doc in fetch_docs(PATHS.data_prc / batch, nlp.vocab):
         totals, fails = attribute_counter(doc)
         unique, _ = attribute_counter(doc, unique=True)
@@ -112,7 +112,8 @@ d = {
     FILENAMES.df_counts_unique: batches_unique,
 }
 for filename, dct in d.items():
-    df = pd.concat([dict_to_df(dct[b], b) for b in LEXISNEXIS.batches], axis=1)
+    df = pd.concat([dict_to_df(dct, b) for b in LEXISNEXIS.batches], axis=1)
+    print(filename, df.shape)
     df.to_pickle(PATHS.results / filename)
 
 print(df.count())
