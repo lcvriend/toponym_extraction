@@ -5,21 +5,28 @@ channels:
 - lcvriend
 dependencies:
 - python=3.7
-- tqdm
+# jupyter
 - jupyter
 - ipykernel
 - jupyterlab
-- matplotlib=>3.1.0
+# data
 - pandas=>0.24.2
+# visualization
+- matplotlib=>3.1.0
+- altair
+- folium
+- adjusttext
+# geographical packages
 - geopandas=>0.5.0
 - descartes=>1.1.0
 - geopy=>1.20.0
 - fiona=>1.8.6
-- flake8 # maybe
-- spacy
 - pyshp=>2.1.0
-- beautifulsoup4=>4.7.1
+# nlp
+- spacy
+# utils
+- flake8 # maybe
+- tqdm
 - lxml
-- adjusttext
+- beautifulsoup4=>4.7.1
 - humannotator
-- folium
