@@ -1,17 +1,31 @@
 ---
-title: Results
+title: Case Study
 ---
 
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega@5"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega-lite@4.0.2"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega-embed@6"></script>
 
-# LexisNexis Place Extraction
+# LexisNexis Place Extraction Case Study:
+**Places discussed in context of the Brexit in Dutch newspapers in 2017**
 
-Check out the places mentioned in [this interactive map](map_toponyms.html).
+This case study shows an example of the kind of analysis that can be done when using *named entity recognition* to annotate text with geographical entitities. The code and scripts that were used in this analysis can be found [here](https://github.com/lcvriend/lexisnexis_place_extraction).
 
 ## Articles
 
+All articles in 2017 containing at least one mention of the phrase 'Brexit' were selected from four Dutch newspapers:
+
+* Two 'quality' papers:
+    * [De Volkskrant](https://www.volkskrant.nl/)
+    * [Trouw](https://www.trouw.nl/)
+* One 'popular' paper:
+    * [De Telegraaf](https://www.telegraaf.nl/)
+* One regional paper:
+    * [De Leeuwarder Courant](https://www.lc.nl/)
+
+In total 1830 articles were found meeting these criteria. The articles that were used in this case study can be found [here](https://github.com/lcvriend/lexisnexis_place_extraction/blob/master/data/lexisnexis_dataset.csv). The content itself is copyrighted, so unfortunately the dataset contains only metadata and not the actual articles themselves. All The meta data of Brexit has been in the news throughout in these four news papers:
+
+#### Number of articles containing the term 'Brexit' per month in 2017
 <div id="vis_pub_month"></div>
 <script>
     (function(vegaEmbed) {
@@ -21,9 +35,26 @@ Check out the places mentioned in [this interactive map](map_toponyms.html).
 })(vegaEmbed);
 </script>
 
+## Geodata
+
+The toponyms were taken from [GeoNames](http://www.geonames.org/) and [REST Countries](http://restcountries.eu/) datasets. The map below shows all data points that were selected from the GeoNames dataset for the *named entity recognition*.  
+
+#### Place distribution in the GeoNames dataset
+<img src="illustrations/distribution_places_world.png"/>
 
 ## Toponyms
 
+Using [spaCy's named entitiy recognition](https://spacy.io/usage/linguistic-features#named-entities) all entities in the newspaper articles were collected and counted. The entities were divided into the following categories:
+
+* Countries
+* Places in the world
+* Places in the UK
+* Places in the Netherlands
+* Places in Friesland
+
+The interactive graphs below shows several measures for the found results. Use the legend to zoom in on a specific newspaper.
+
+####
 <div id="vis_toponyms"></div>
 <script>
 (function(vegaEmbed) {
@@ -31,28 +62,22 @@ Check out the places mentioned in [this interactive map](map_toponyms.html).
     var embedOpt = {"mode": "vega-lite"};
     vegaEmbed("#vis_toponyms", spec, embedOpt);
 })(vegaEmbed);
-
 </script>
+
+Of course it is particularly interesting to see *what* places are mentioned in the articles and how they are distributed on a map. Explore the results in [this interactive map](map_toponyms.html). 
 
 
 ## Lemma clouds
+The articles were also lemmatized using spaCy. Below these lemma's have been turned into clouds: 
 
 ### Volkskrant
-
-<!-- <embed src="illustrations/wc_volkskrant.pdf"/> -->
 <img src="illustrations/wc_volkskrant.png"/>
 
 ### Trouw
-
-<!-- <embed src="illustrations/wc_trouw.pdf"/> -->
 <img src="illustrations/wc_trouw.png"/>
 
 ### Telegraaf
-
-<!-- <embed src="illustrations/wc_telegraaf.pdf"/> -->
 <img src="illustrations/wc_telegraaf.png"/>
 
 ### Leeuwarder Courant
-
-<!-- <embed src="illustrations/wc_leeuwarder_courant.pdf"/> -->
 <img src="illustrations/wc_leeuwarder_courant.png"/>
