@@ -52,9 +52,9 @@ Using [spaCy's named entitiy recognition](https://spacy.io/usage/linguistic-feat
 * Places in the Netherlands
 * Places in Friesland
 
-The interactive graphs below shows several measures for the found results. Use the legend to zoom in on a specific newspaper.
+The interactive graphs below shows several measures for the found results. Click on the legend labels to zoom in on a specific newspaper. You can select multiple newspaper by shift-clicking.
 
-####
+#### Some measures on the occurrence of toponyms in the selected articles
 <div id="vis_toponyms"></div>
 <script>
 (function(vegaEmbed) {
