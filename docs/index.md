@@ -64,7 +64,7 @@ The interactive graphs below shows several measures for the found results. Use t
 })(vegaEmbed);
 </script>
 
-Of course it is particularly interesting to see *what* places are mentioned in the articles and how they are distributed on a map. Explore the results in [this interactive map](map_toponyms.html). 
+Of course it is particularly interesting to see *what* places are mentioned in the articles and how they are distributed on a map. Explore the results in [this interactive map](map_toponyms.html). The circles represent the number of times the toponym was found in the dataset. With the layer control you can switch on/off layers. Click on a circle to open a tooltip with more information on the toponym and the frequency with which it occurs in the text and articles.
 
 
 ## Lemma clouds
