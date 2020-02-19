@@ -24,7 +24,7 @@ Let's try to find that out by analyzing Dutch newspaper coverage on Brexit.
 
 ## Articles
 
-To start we will select all articles in 2017 containing at least one mention of the phrase 'Brexit' in four Dutch newspapers:
+To start we select all articles in 2017 containing at least one mention of the phrase 'Brexit' in four Dutch newspapers:
 
 * Two 'quality' newspapers:
     * [De Volkskrant](https://www.volkskrant.nl/)
