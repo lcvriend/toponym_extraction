@@ -7,7 +7,8 @@ The toponyms are divided into countries and cities.
 - Countrty toponyms are taken from 'http://restcountries.eu/'.
 - City toponyms are taken from 'http://www.geonames.org/'.
 
-## DATASETS
+
+## GEO DATA
 **restcountries**
 All countries from the restcountries dataset are selected in the language
 defined in [PROJECT] in 'config.ini'. In this project an 'alts_countries.json'
@@ -28,14 +29,15 @@ needs.
 
 
 ## GEOGRAPHICAL ENTITIES
-The city toponyms may be subcategorized using 'config.ini' by assigning
-a label to a query that will run on the geonames dataset. This will allow
-spaCy to group toponyms together under the assigned labels. In the current
-iteration of the project four categories are distinguished:
-- Places in the UK
-- Places in the NL but not Friesland
-- Places in Friesland
-- Places in the world which are not in one of the above
+The city toponyms may be subcategorized using the [MODEL] chapter in
+'config.ini' by assigning a label to a query that will run on the geonames
+dataset. This will allow spaCy to group toponyms together under the assigned
+labels. In the current iteration of the project four categories are
+distinguished:
+- 'places_uk': places in the UK
+- 'places_nl': places in the NL but not Friesland
+- 'places_fr': places in Friesland
+- 'places':    places in the world which are in none of the above
 
 
 ## WORKFLOW
@@ -51,7 +53,7 @@ annotation takes place where all found entities are marked as either positive
 (when it correctly matches the geographical entity) or negative (when it does
 not). The second time the model is built only the positive identities are added.
 
-The model itself will be stored in the PATHS.model folder.
+The model itself will be stored in the `PATHS.model` folder.
 """
 
 # standard library
