@@ -66,10 +66,10 @@ Using `spaCy's` [named entitiy recognition functionality](https://spacy.io/usage
 Toponyms         | REST/GeoNames | Found in dataset | % Found 
 -----------------|--------------:|-----------------:|---------:
 Countries        |           268 |              151 |    56.3 
-Cities Friesland |            27 |               11 |    40.7 
-Cities NL        |           474 |              119 |    25.1 
-Cities UK        |         1,532 |              147 |     9.6 
-Cities world     |        43,237 |              844 |     2.0 
+Cities Friesland |            27 |               10 |    37.0 
+Cities NL        |           474 |               94 |    19.8 
+Cities UK        |         1,532 |              102 |     6.6 
+Cities world     |        43,237 |              240 |     0.5 
 
 The interactive graphs below shows several measures for the found results. Click on the legend labels to zoom in on a specific newspaper. Select multiple newspapers by shift-clicking.
 
