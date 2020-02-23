@@ -1,11 +1,11 @@
 """
-CREATE NLP MODEL FOR IDENTIFIYING PLACE NAMES
-=============================================
+CREATE NLP MODEL FOR IDENTIFIYING TOPONYMS
+==========================================
 
-This script creates the NLP model in spaCy for identifying place names.
-The place names are divided into countries and cities.
-- Countrty place names are taken from 'http://restcountries.eu/'.
-- City place names are taken from 'http://www.geonames.org/'.
+This script creates the NLP model in spaCy for identifying toponyms.
+The toponyms are divided into countries and cities.
+- Countrty toponyms are taken from 'http://restcountries.eu/'.
+- City toponyms are taken from 'http://www.geonames.org/'.
 
 ## DATASETS
 **restcountries**
@@ -20,7 +20,7 @@ administrative division. The data is loaded with the `load_geonames` function.
 This function will select the place name in the language set under [PROJECT] in
 'config.ini'.
 
-It is important to note that certain place names may refer to multiple places.
+It is important to note that certain toponyms may refer to multiple places.
 Here this ambiguity is dealt with by assigning the place name to the place with
 the largest population and ignoring the others. If it is necessary to deal with
 this ambiguity differently than you will need to adjust the code to fit your
@@ -28,9 +28,9 @@ needs.
 
 
 ## GEOGRAPHICAL ENTITIES
-The city place names may be subcategorized using 'config.ini' by assigning
+The city toponyms may be subcategorized using 'config.ini' by assigning
 a label to a query that will run on the geonames dataset. This will allow
-spaCy to group place names together under the assigned labels. In the current
+spaCy to group toponyms together under the assigned labels. In the current
 iteration of the project four categories are distinguished:
 - Places in the UK
 - Places in the NL but not Friesland
@@ -40,7 +40,7 @@ iteration of the project four categories are distinguished:
 
 ## WORKFLOW
 The script first sets up the topographies based on the project settings. Because
-this project uses a naive approach, i.e. simply counting place names, there
+this project uses a naive approach, i.e. simply counting toponyms, there
 should not be any homonyms between the topographies. Therefore, when building
 the model the topographies are compared to eachother. If any homonyms are found,
 they are stored under 'duplicate_place_names.json' in the PAHTS.results folder.
