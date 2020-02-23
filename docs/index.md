@@ -12,6 +12,8 @@ title: Case Study
 **Toponym Extraction Case Study:**  
 *Using named entity recognition to extract geographical information from newspapers*
 
+Author: [Lawrence Vriend](https://github.com/lcvriend)
+
 This case study shows an example of the kind of analysis that can be done when using *named entity recognition* (NER) to annotate texts with geographical entitities. The code and scripts that were used in this analysis can be found in the [GitHub repo](https://github.com/lcvriend/toponym_extraction).
 
 ## Idea
@@ -24,7 +26,7 @@ Let's try to find that out by analyzing Dutch newspaper coverage on Brexit.
 
 ## Workflow
 
-<img src="docs/illustrations/workflow.svg" alt="Workflow">
+<img src="illustrations/workflow.svg" alt="Workflow">
 
 ## Articles
 
