@@ -5,7 +5,7 @@ title: Lemma Clouds
 <img src="illustrations/banner.png"/>
 
 # Lemma clouds
-The text from the articles was also [lemmatized](https://spacy.io/api/lemmatizer) using `spaCy`. These lemma's were counted and then turned into the following word clouds: 
+The text from the articles was also [lemmatized](https://spacy.io/api/lemmatizer) using `spaCy`. These lemmata were counted and then turned into the following word clouds: 
 
 ## Volkskrant
 <img src="illustrations/wc_volkskrant.png"/>

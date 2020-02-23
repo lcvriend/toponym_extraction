@@ -40,7 +40,7 @@ To start we select all articles in 2017 containing at least one mention of the p
 * One regional newspaper:
     * [De Leeuwarder Courant](https://www.lc.nl/)
 
-In total 1,830 articles were found meeting these criteria. The articles that were used in this case study can be found [here](https://github.com/lcvriend/lexisnexis_place_extraction/blob/master/data/lexisnexis_dataset.csv). The content itself is copyrighted, so unfortunately the dataset contains only metadata and not the actual articles themselves. Check out these [word clouds](lemma_clouds.md) though to see which lemma's are most prevalent in the respective newspapers. The Brexit has been in the news throughout in these four news papers:
+In total 1,830 articles were found meeting these criteria. The articles that were used in this case study can be found [here](https://github.com/lcvriend/toponym_extraction/blob/master/data/lexisnexis_dataset.csv). The content itself is copyrighted, so unfortunately the dataset contains only metadata and not the actual articles themselves. Check out these [word clouds](lemma_clouds.md) though to see which lemmata are most prevalent in the respective newspapers. The Brexit has been in the news throughout in these four news papers:
 
 #### Number of articles containing the term 'Brexit' per month in 2017
 <div id="vis_pub_month"></div>
