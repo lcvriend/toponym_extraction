@@ -85,6 +85,8 @@ The interactive graphs below shows several measures for the found results. Click
 
 The analysis also tells us specifically *what* places were mentioned in the articles. By plotting that information on a map we can see the geographical distribution of news on Brexit. Explore the results in [this interactive map](map_toponyms.html). The circle sizes represent the number of times a toponym was found in the dataset. With the layer control you can switch on/off layers. Click on a circle to open a tooltip with more information on the toponym and the frequency with which it occurs in the text and articles.
 
+Just by looking at the map it becomes clear that some toponyms occur much more than others. Check [this graph](distributions.md) to find out more about these distributions.
+
 ## Insights
 
 Some insights that can be gleaned from this analysis are:
