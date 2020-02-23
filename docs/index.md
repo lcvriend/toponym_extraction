@@ -12,7 +12,7 @@ title: Case Study
 **Toponym Extraction Case Study:**  
 *Using named entity recognition to extract geographical information from newspapers*
 
-This case study shows an example of the kind of analysis that can be done when using *named entity recognition* to annotate texts with geographical entitities. The code and scripts that were used in this analysis can be found in the [GitHub repo](https://github.com/lcvriend/toponym_extraction).
+This case study shows an example of the kind of analysis that can be done when using *named entity recognition* (NER) to annotate texts with geographical entitities. The code and scripts that were used in this analysis can be found in the [GitHub repo](https://github.com/lcvriend/toponym_extraction).
 
 ## Idea
 
@@ -21,6 +21,10 @@ This case study shows an example of the kind of analysis that can be done when u
 Newspapers inform us about what is happening in the world. In this sense they are conveying to us geographical information. One tool we have at our disposal for reasoning about our world are [toponyms](https://en.wikipedia.org/wiki/Toponymy), i.e. place names. This raises the question how much newspapers refer to places through toponyms.
 
 Let's try to find that out by analyzing Dutch newspaper coverage on Brexit.
+
+## Workflow
+
+<img src="docs/illustrations/workflow.svg" alt="Workflow">
 
 ## Articles
 
